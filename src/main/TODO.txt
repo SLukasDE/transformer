@@ -1,0 +1,576 @@
+- wenn nur keine Lib (weder statisch noch dynamisch) erzeugt wird und auch keine Sourcen bereitgestellt werden, dann dürfen auch keine Headers bei "install" ins Repo
+- inkrementelles bauen
+- paralleles bauen (eslx process?)
+- flex bison oxygen
+
+TODO:
+- Rekursives Bauen von Sourcen über mehrere Dependencies hinweg testen (Tut es? Vermutlich ja, da alle Dependencies in solvedDeps enthalten sind)
+- Am Ende von "Solve" die SolvedDescriptors "hasDynamic" auf False setzen, wenn "hasStatic" auf True gesetzt ist.
+- Attribute "hasDynamic" und "hasStatic" von SolvedDescriptors in "useDynamic" und "useStatic" umbenennen.
+- Prüfen, ob Attribute "hasSource" in SolvedDescriptors nicht weg kann.
+- Warum wird z.B. bei pThread-Lib ein compile-Ordner angelegt.
+- esl-x Projekt angelegen für FileEntries und Source
+- Flex, Bison-Generator entwickeln
+- Low-Prio: SLVRE umsetzen
+- Low-Prio: "std::string architecture" in "Architecture architecture" ersetzten.
+            Architecture wird eine Struct mit z.B. einem vector<string>, der beispielsweise "c++","linux","gcc" enthält
+            Klasse Architecture bekommt eine Methode "toString()" , um erstmal abwärtkompatibel zu sein (Vergleichen, Verzeichnis anlegen, ...)
+            transformer.cfg listet nicht mehr alle Architekturen in einer Zeile auf, sondern pro Architektur eine Zeile mit den Aufzählungen der Eigenschaften der Arch.
+- Low-Prio: User zu ArtefactID hinzufügen
+- Low-Prio: Klasse Variant um Variant-Name-Attribut erweitern und an diversen Stellen das separate Argument VariantName entfernen
+
+- Akzeptanz: moderne Fortschrittsausgabe
+- Akzeptanz: Projektdateien erzeugen
+- Akzeptanz: fremde Build-Dateien erzeugen (z.B. Make, CMake, Meson, ...)
+
+- Build: Execute parallel
+- Build: incrementelles übersetzen
+- Build: als Daemon im Hintergrund Sourcen überwachen und sofort übersetzen
+- Build: Compiler herunterladen (z.B. Docker, dort auch bauen, Test ausführen, Code generieren)
+
+- Korrektheit: Solved-Einträge in die Config einbauen und beim Solve berücksichtigen
+
+- Generate-Sources: fehlende Generator-Plugins entwickeln
+- Generate-Sources: Support von No-Arch-Sourcen
+                    - Lösungsvorschalg: in "transformer.cfg" steht nicht "generator: ..." sondern "generator-arch: ..." bzw. "generator-noarch: ..."
+                      (Unschön: der Generator weiß das, sodass hier die Differenzierung durch den Benutzer überflüssig ist)
+                    - HINWEIS: Falls ein Generator sowohl "arch" als auch "no-arch"-Sourcen erzeugt, macht es keinen Sinn,
+                               die "no-arch"-Sourcen separat hochzuladen. Die "arch"-Sourcen müssten ja eh neu erzeugt werden.
+                               Dann kann man auch gleich die "no-arch"-Sourcen mit in die "arch"-Sourcen packen.
+- Generate-Sources: Architektur-Hierarchie berücksichtigen. Vielleicht werden die Sourcen für "linux" alle gleich erzeugt. Dann braucht man keine
+                    separate Sourcen für "linux-gcc" und "linux-clang" zu erzeugen.
+                    -> sowohl beim Generieren müssten die Sourcen in die allgemeinste Architektur verpackt werden.
+                    -> beim Holen der "generated-sources" müssten ebenfalls die Architekturen schrittweise verallgemeinert werden und geprüft werden, ob vorhanden.
+- Generate-Sources: Zusammenfassung: (siehe letze zwei Punkte "Support von No-Arch-Sourcen" und "Architektur-Hierarchie berücksichtigen"):
+                    -> für einen Generator muss bekannt sein, für welche Archtikturen er Sourcen erzeugt:
+                       - ("") oder ("linux","macos","windows"),("zos") oder ...
+
+- Architekturen: Support diverser Architekturen generell (linux-gcc is linux, linux-gcc-x64 is linux-gcc, ...)
+- Architekturen: Support von Clang, Emscripten, MinGW, VisualC
+- Architekturen: Support für C Code
+- Architekturen: Remote-Build (incrementelle Updates)
+
+- Veröffentlichen: Repository zur Verfügung stellen
+- Veröffentlichen: Website mit Doku
+- Veröffentlichen: Registrieren für eigenes Repo
+- Veröffentlichen: Artefact-Id ersetzen durch Struct {user: string, id: string}.
+                   - Dabei wird die Verzeichnis-Struktur eine Ebene tiefer (wegen User)
+                   - In der Config wird die bisherige ID nun angegeben durch "id: <user>/<id>", z.B: "id: transformer/core" oder "id: transformer/full"
+- Veröffentlichen: Diverse Libs (Boost, etc) bereitstellen
+
+- Repository: System-Repo (automatisch , konfigurieren)
+- Repository: Support von Github (npm? etc?)
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+  Der Code (.h, .cpp, .BND etc) wird pro Variante, Architektur und Generator im Ordner .../generated/<generator> abgelegt.
+  z.B. "build/default/architecture/linux-gcc/generated/moc"
+  
+  In dem TAR sind NICHT alle Dateien enthalten, die der Generator erzeugt hat. Und zwar werden die Dateien gelöscht,
+  die Dateien, die den SourceFile-Pattern matchen.
+  -> Es wurde ja bereits eine Binary gebaut! Daher sind nur Headers und z.B. BND-Files erforderlich.
+  
+  Falls die verwendeten Generatoren eines Artefakts für alle Architekturen den selben Code erzeugen, wird kein Verzeichnis "generated-headers" benötigt.
+  Die Projekt-Settings der IDE enthalten ein zusätzliches Include-Directory pro verwendeten Generator im eigenen Descriptor (Project-File wird auf eine Architektur und eine Variante festgelegt)
+  Falls die eingesetzten Generatoren für jede Architektur den selben Code erzeugen, wird der erzeugte Code beim Step "Provide" mit in die Sources.tgz bzw Headers.tgz integriert.
+  -> beim Verwenden dieses Artefacts als Depenency wird anhand der Gnereratoren überprüft, ob sie Archtiektur-spezifischen code erzeugen. Wenn nicht, wird kein neuer Code erzegut, es wird der Code so wie er ist übersetzt, da er den generierten Code enthält)
+  Falls die im eigenen Descriptor verwendeten Generatoren Architektur-Speizifischen Code enthält bleiben Source.tgz und Headers.tgz im Originial-Zustand. Die im generierten Code enthaltenen Headers werden im Verzeichnis
+  "build/<variant default|variants/...>/architecture/linux-gcc/generated-headers" gesammelt. Die IDE enthält auch diesen Pfad als zusätzliches Include-Directory. Beim Step "Provide/Install" wird dieses Verzeichnis ebenfalls mit hochgeladen.
+  
+  Falls dieses Artefact als Depenency verwendet wird, werden die Dateien "generated-headers.tgz" zusätzlich in das bereits existierende Header-Verzeichnis der Dependency installiert, falls die Dependency als Binary-Artefact verwendet werden kann.
+  Falls die Dependency von den Sourcen übersetzt werden muss, wird "generated-headers.tgz" gar nicht verwendet. Aber beim Generieren der Sourcen entstehen verzeichnis(se?)...
+  
+- Architekturen konfigurierbar machen.
+  Also "linux-gcc" soll nicht mehr hart kodiert Teil der Software, sondern es existiert pro Architektur eine Config, z.B. für "linux-gcc-x64-9.2", die den Builder "gcc" benötigt, seine Settings beschreibt und (jetzt ganz wichtig!):
+  Die Config enthält die Angabe, dass sie die Architektur "linux", "linux-gcc" und "linux-gcc-x64" erfüllt. Wenn ein Descriptor als Architektur die Angabe "linux" oder "linux-gcc" enthält,
+  dann weiß das System, dass damit u.a. auch die Architektur "linux-gcc-x64-9.2" gemeint ist.
+  -> Binary-Artefacts werden nur für die Architekturen erstellt, die direkt durch eine Architektur erfüllt wird.
+     Für die übrigen Architekturen werden die Sourcen hoch geladen (Warning, wenn package-source nicht angegeben)
+  -> Bsp: Ein Descriptor enthält die Architekturen "linux-gcc", "linux-gcc-x32", "linux-gcc-x64", "linux-mingw", "linux-mingw-x32", "linux-mingw-x64", "linux-gcc-x32-9.2", "linux-gcc-x64-9.2".
+     Es wird nach allen Architekturen gesucht, aber es werden direkt vom Namen her nur die Architekturen "linux-gcc-x32-9.2" und "linux-gcc-x64-9.2" gefunden.
+     Da die Architekturen auch "linux-gcc", "linux-gcc-x32", "linux-gcc-x64" erfüllen, können diese Architekturen ebenfalls von der Liste genommen werden.
+     Trotzdem sind mit "linux-gcc-x32-9.2", "linux-gcc-x64-9.2" nicht alle Aritekturen enthalten, die "linux-gcc", "linux-gcc-x32", "linux-gcc-x64" erfüllen. Daher sollte der Descriptor als Package "source" enthalten und wenn nein,
+     sollte es eine Warnung geben.
+     Es bleibt noch "linux-mingw", "linux-mingw-x32", "linux-mingw-x64" auf der Liste. Es wird nun nach Architekturen gesucht, die diese Architekturen erfüllen. Gleichzeitig können in diesen Architekturen auch Vorschläge enthalten
+     sein, welche Architektur sie am besten erfüllt. So enthält die Konfiguration "linux-mingw" als Vorschäge zum realisieren die Architekuren "linux-mingw-x64" und "linux-mingw-x32" in dieser Reihenfolge.
+     WICHTIG: Ob eine Architektur eine andere Erfüllt, wird stets in der Architektur angegeben, die meint eine andere zu erfüllen.
+              D.h. in "linux-mingw" wurde in letzter Konsequenz NICHT die Wahrheit über "linux-mingw-x32" und "linux-mingw-x64" angegeben.
+              Die Wahrheit steht in "linux-mingw-x32" und "linux-mingw-x64". Dort steht, dass sie "linux-mingw" erfüllen.
+     Es wurde anhand der Vorschläge die beiden Architekturen "linux-mingw-x32-6.4" und "linux-mingw-x64-6.4" gefunden. dementsprechend wird auch für diese Architekturen gebaut.
+     Beim Install-Step ist zu überlegen, ob der Descriptor um diese 2 Architekturen ergänzt werden soll und sie dann mit hochläde oder ob diese Binaries verworfen weden.
+     Wichtig ist nur, dass für jede Architektur etwas gebaut wurde.
+
+- System-Repository konfigurierbar machen
+
+- fehlende Architekturen als Dockerfile laden
+
+- Descriptor file mit Flex/Bison parsen (geht erst wenn Plugins existieren)
+
+- Logger von ESL verwenden
+
+- es wird noch nicht geprüft, ob die verfügbare Binär-Dependency kompatibel ist. Es gibt hierfür den Abschnitt "solved:", der die API-Version enthält.
+  -> entpsrechend muss dieser Teil bei "Provide" auch im Descriptor gepatcht werden.
+  
+- Project-Files für diverse IDE's erzeugen (angabe von Architektur und Variante erforderlich?!)
+  -> Eclipse, Visual Studio, VS Code, KDevelop, Netbeans, XCode
+- Build-Files für diverse Build-Tools erzeugen
+  -> Make, CMake, Meson, BJam, Ninja
+  
+- Remote-Architekturen anbinden.
+
+- Repository-System sollte alle Lib's finden (Konfig: Diverse Suchpfade mit zugeh. Include-Pfad angeben), aber Libs aus anderen Repos sind zu bevorzugen
+
+BuildEnvironment (JSON?)
+----------------
+	repository:
+		url: http://....
+		url: http://....
+		url: file://....
+	remote-architecture:
+		url: http://
+		username:
+		password:
+	architecture: i686-linux-gcc
+		Goal: linux-gcc
+			Cxx: g++
+			...
+		include-paths: ...
+		library-search-path: ...
+		dependency: boost
+			include-paths: /opt/boost_1_70_0
+			library-search-path: /opt/boost_1_70_0/stage/lib
+	dependency: boost
+		include-paths: ...
+		library-search-path: ...
+	include-paths: ...
+	library-search-path: ...
+
+BuildDescriptor
+---------------
+	  name: transformer 1.0.0
+	  architecture: i686-linux-gcc
+	  
+	  # "package: headers" ist quatsch, da dies implizit angegeben ist, wenn static oder dynamic angegeben.
+	  # Wenn keine IN DER DATEI Packages angegeben sind ist äquivalent zu "alles angegeben" (wie hier geschehen). Dies geschieht beim Laden der Datei.
+	  # Wenn später im Code die Struct keine Packages enthält, wird sie in den Verarbeitungsschritten ignoriert bzw. entfernt.
+	  package: source [headers] static dynamic executable
+	  
+	  static: esl 1.0.0
+	  static: boost_filesystem
+	  dynamic: db2
+	  system: pthread
+	  source: tinyxml
+	
+
+
+
+
+d
+
+const std::string& name, const VersionRange& versionRange, const std::string& architecture
+
+name/
+   1.0.0/
+     transformer.cfg
+     name-source-1.0.0.tgz
+     name-<architecture>-1.0.0.tgz (enthält mindestens eines dieser Packages: static, dynamic, executable. Falls static oder Dynamic enthalten ist, sind auch headers enthalten)
+
+Dependency Solver
+#################
+0. Ausgangssituation:
+   ==================
+ 
+   Name:    transformer
+   Version: 1.0.0
+   Packages: source, static, dynamic
+   -> benötigt A(...) B(...)
+   
+   Verügbare Artefakte:
+   --------------------
+   (empty)
+
+   Benötigte Artefakte:
+   --------------------
+   (empty)
+   
+1. Beschreibung:
+   =============
+   Füge "transformer" in "verfügbare Artefakte" hinzu und füge seine Dependencies in "benötigte Artefakte" hinzu.
+   
+   Zwischenstand:
+   ==============
+
+   Verügbare Artefakte:
+   --------------------
+   [1] NAME:     transformer
+       VERSION:  1.0.0
+       PACKAGES: source, static, dynamic
+       benötigt: A(2.0.3 - 2.0.7) B(4.18.0 - 4.18.99)
+
+   Benötigte Artefakte:
+   --------------------
+   [1] NAME:     A
+       VERSION:  2.0.3 - 2.0.7
+       PACKAGES: source, static, dynamic
+       
+   [2] NAME:     B
+       VERSION:  4.18.0 - 4.18.99
+       PACKAGES: source, static, dynamic
+
+2. Beschreibung:
+   =============
+   - Nehme erstes Element aus "benötigte Artefakte" und entferne es aus der Liste.
+   
+       NAME:     A
+       VERSION:  2.0.3 - 2.0.7
+       PACKAGES: source, static, dynamic
+       
+   - Prüfe, ob das Element mit seinem Namen in "verfügbare Artefakte" enthalten ist und mit den Attributen "Version" und "Packages" matcht.
+     - Wenn JA, reduziere die Attribute "Version" und "Packages" entspechend des benötigten Attribute. (weil es zuvor einen Match gab, sind Attribute und Packages weiterhin nicht leer)
+     - Wenn NEIN, lade seine Descriptoren und füge die Dependencies in "benötigte Artefakte hinzu" (Prüfe, ob es die jeweilige Dependency schon gibt und reduziere sie, abbruch, wenn "leer reduziert")
+   
+       geladene Descriptoren:
+       ----------------------
+       NANE:     A                     NAME:     A
+       VERSION:  2.0.3                 VERSION:  2.0.7
+       PACKAGES: static, dynamic       PACKAGES: source
+       benötigt: C(0.0.1) D(10.0.5)    benötigt: C(0.0.1) D(10.0.5)
+   
+   Zwischenstand:
+   ==============
+
+   Verügbare Artefakte:
+   --------------------
+   [1] NAME:     transformer
+       VERSION:  1.0.0
+       PACKAGES: source, static, dynamic
+       benötigt: A(2.0.3 - 2.0.7) B(4.18.0 - 4.18.99)
+
+   [2] NAME:     A                     Name:     A
+       VERSION:  2.0.3                 Version:  2.0.7
+       PACKAGES: static, dynamic       PACKAGES: source
+       benötigt: C(0.0.1) D(10.0.5)    benötigt: C(0.0.1) D(10.0.5)
+       
+   Benötigte Artefakte:
+   --------------------
+   [1] Name:    B
+       Version: 4.18.0 - 4.18.99
+       Packages: source, static, dynamic
+       
+   [2] Name:    C
+       Version: 0.0.1
+       Packages: source, static, dynamic
+       
+   [3] Name:    D
+       Version: 10.0.5
+       Packages: source, static, dynamic
+
+
+3. Beschreibung:
+   =============
+   - Nehme erstes Element aus "benötigte Artefakte" und entferne es aus der Liste.
+   
+       Name:    B
+       Version: 4.18.0 - 4.18.99
+       Packages: source, static, dynamic
+       
+   - Prüfe, ob das Element mit seinem Namen in "verfügbare Artefakte" enthalten ist und mit den Attributen "Version" und "Packages" matcht.
+     - Wenn JA, reduziere die Attribute "Version" und "Packages" entspechend des benötigten Attribute. (weil es zuvor einen Match gab, sind Attribute und Packages weiterhin nicht leer)
+     - Wenn NEIN, lade seine Descriptoren und füge die Dependencies in "benötigte Artefakte hinzu" (Prüfe, ob es die jeweilige Dependency schon gibt und reduziere sie, abbruch, wenn "leer reduziert")
+   
+       geladene Descriptoren:
+       ----------------------
+       Name:    B
+       Version: 4.18.0 - 4.18.99
+       Packages: source, static, dynamic
+       -> benötigt C(...) transformer(...)
+   
+   Zwischenstand:
+   ==============
+
+   Verügbare Artefakte:
+   --------------------
+   [1] NAME:     transformer
+       VERSION:  1.0.0
+       PACKAGES: source, static, dynamic
+       benötigt: A(2.0.3 - 2.0.7) B(4.18.0 - 4.18.99)
+
+   [2] NAME:     A                      Name:     A
+       VERSION:  2.0.3                  Version:  2.0.7
+       PACKAGES: static, dynamic        PACKAGES: source
+       benötigt: C(0.0.1) D(10.0.5)     benötigt: C(0.0.1) D(10.0.5)
+       
+   [3] NAME:     B                      NAME:    B
+       VERSION:  4.18.3                 VERSION: 4.18.99
+       PACKAGES: static, dynamic        PACKAGES: source
+       benötigt: C(0.0.0) transformer(0.0.9) benötigt: C(0.0.1) transformer(1.0.0)
+
+   Benötigte Artefakte:
+   --------------------
+   [1] Name:     C
+       Version:  0.0.1
+       Packages: source, static, dynamic
+       
+   [2] Name:     D
+       Version:  10.0.5
+       Packages: source, static, dynamic
+.
+
+
+
+
+
+
+
+
+
+
+
+
+
+0. Ausgangssituation:
+   ==================
+ 
+   Name:    transformer
+   Version: 1.0.0
+   Packages: source, static, dynamic
+   -> benötigt A(...) B(...)
+   
+   std::map<std::string, Descriptor>
+   Verügbare Artefakte:
+   --------------------
+   (empty)
+   
+   std::map<std::string, std::vector<Dependency>>
+   Benötigte Artefakte:
+   --------------------
+   (empty)
+   
+   
+   Algorithmus (class DependencySolver):
+   ------------
+   Conscructor(const Repositories& repositories,
+	       std::map<std::string, Descriptor> available,
+	       std::map<std::string, std::vector<Dependency>> required)
+
+   // jedes Element des ersten Vectors enthält eine mögliche Lösung, die durch eine Menge von Descriptors definiert ist.
+   std::vector< std::vector<Descriptor> > solve() {
+     std::vector< std::vector<Descriptor> > result;
+     
+     if(required.empty()) {
+       result.push_back(std::move(available));
+     }
+   
+   
+   
+   - Beende den Strang mit "SUCCESSFUL", wenn die Liste der "benötigte Artefakte" leer ist.
+   
+   - Nehme erstes Element aus "benötigte Artefakte" und entferne es aus der Liste.
+   
+   - Lade verfügbare Descriptoren des Elements
+   
+   - Führe für jeden gelandenen verfügbaren Descriptor einen Fork durch (also dupliziere die Listen "verfügbare Artefakte" und "benötigte Artefakte")
+   
+   - Verfahre nun pro Strang mit dem jeweils geladenen verfügbaren Descriptor weiter
+       
+   - Prüfe, jeweils in dem Strang in "verfügbare Artefakte", ob es einen Eintrag entsprechend des Namens mit Descriptoren gibt.
+     - Wenn JA:
+       - Reduziere die Attribute "Version" und "Packages" des gefundenen Element mit dem neuen verfügbaren Descriptor.
+       - Wenn der Descriptor "leer reduziert" wurde, dann beende den Strang mit "cannot solve".
+
+   - Füge den neu verfügbaren Descriptor in die Liste "verfügbare Artefakte" hinzu.
+   
+   - Prüfe für jede Dependency des neuen verfügbaren Descriptors, ob die jeweilige Dependency bereits in "verfügbare Artefakte" enthalten ist.
+     - Wenn JA:
+       - Reduziere die Attribute "Version" und "Packages" des gefundenen Descriptors entsprechend der Dependency.
+       - Wenn der Descriptor "leer reduziert" wurde, dann beende den Strang mit "cannot solve".
+       - Reduziere die Attribute "Version" und "Packages" der Dependency entsprechend des gefundenen Descriptor.
+       - Wenn die Dependency "leer reduziert" wurde, dann beende den Strang mit "cannot solve".
+
+   - Prüfe für jede Dependency des neuen verfügbaren Descriptors, ob die jeweilige Dependency bereits in "benötigte Artefakte" enthalten ist.
+     - Wenn JA:
+   
+1. Zwischenstand:
+   ==============
+
+   Verügbare Artefakte:
+   --------------------
+   [1] NAME:     transformer
+       VERSION:  1.0.0
+       PACKAGES: source, static, dynamic   [2] Name:    C
+       Version: 10.0.5
+       Packages: source, static, dynamic
+       
+
+       benötigt: A(2.0.3 - 2.0.7) B(4.18.0 - 4.18.99)
+
+   Benötigte Artefakte:
+   --------------------
+   [1] NAME:     A
+       VERSION:  2.0.3 - 2.0.7
+       PACKAGES: source, static, dynamic
+       
+   [2] NAME:     B
+       VERSION:  4.18.0 - 4.18.99
+       PACKAGES: source, static, dynamic
+
+2. Zwischenstand:
+   ==============
+
+   Verügbare Artefakte:
+   --------------------
+   [1] NAME:     transformer
+       VERSION:  1.0.0
+       PACKAGES: source, static, dynamic
+       benötigt: A(2.0.3 - 2.0.7) B(4.18.0 - 4.18.99)
+
+   [2] NAME:     A                                     NAME:     A
+       VERSION:  2.0.3                                 VERSION:  2.0.7
+       PACKAGES: static, dynamic                       PACKAGES: source
+       benötigt: B(0.0.1) C(10.0.5)                    benötigt: B(0.0.1) C(10.0.5)
+       
+   Benötigte Artefakte:
+   --------------------
+   [1] NAME:    B                                      NAME:    B
+       VERSION: 4.18.0 - 4.18.99                       VERSION: 0.0.1
+       PACKAGES: source, static, dynamic               PACKAGES: source, static, dynamic
+       
+   [2] NAME:     C
+       VERSION:  10.0.5
+       PACKAGES: source, static, dynamic
+
+
+3. Beschreibung:
+   =============
+   - Nehme erstes Element aus "benötigte Artefakte" und entferne es aus der Liste.
+   
+       Name:    B
+       Version: 4.18.0 - 4.18.99
+       Packages: source, static, dynamic
+       
+   - Prüfe, ob das Element mit seinem Namen in "verfügbare Artefakte" enthalten ist und mit den Attributen "Version" und "Packages" matcht.
+     - Wenn JA, reduziere die Attribute "Version" und "Packages" entspechend des benötigten Attribute. (weil es zuvor einen Match gab, sind Attribute und Packages weiterhin nicht leer)
+     - Wenn NEIN, lade seine Descriptoren und füge die Dependencies in "benötigte Artefakte hinzu" (Prüfe, ob es die jeweilige Dependency schon gibt und reduziere sie, abbruch, wenn "leer reduziert")
+   
+       geladene Descriptoren:
+       ----------------------
+       Name:    B
+       Version: 4.18.0 - 4.18.99
+       Packages: source, static, dynamic
+       -> benötigt C(...) transformer(...)
+   
+   Zwischenstand:
+   ==============
+
+   Verügbare Artefakte:
+   --------------------
+   [1] NAME:     transformer
+       VERSION:  1.0.0
+       PACKAGES: source, static, dynamic
+       benötigt: A(2.0.3 - 2.0.7) B(4.18.0 - 4.18.99)
+
+   [2] NAME:     A                      Name:     A
+       VERSION:  2.0.3                  Version:  2.0.7
+       PACKAGES: static, dynamic        PACKAGES: source
+       benötigt: C(0.0.1) D(10.0.5)     benötigt: C(0.0.1) D(10.0.5)
+       
+   [3] NAME:     B                      NAME:    B
+       VERSION:  4.18.3                 VERSION: 4.18.99
+       PACKAGES: static, dynamic        PACKAGES: source
+       benötigt: C(0.0.0) transformer(0.0.9) benötigt: C(0.0.1) transformer(1.0.0)
+
+   Benötigte Artefakte:
+   --------------------
+   [1] Name:     C
+       Version:  0.0.1
+       Packages: source, static, dynamic
+       
+   [2] Name:     D
+       Version:  10.0.5
+       Packages: source, static, dynamic
+
+
+
+
+
+
+Eigenplasma für Augenpartie unterspritzen
+Botox
+
+7.8. ab 10:00
+8.8.
+Samira Ay
+
+
+
+
+NEED-BIN-ARTEFACT (static-lib | dynamic-lib) := rootArtefact.packageExecutable || !Source(src/test).getEntries().empty()
+
+In jedem Fall wird pro Dependency eine Header-Source benötigt
+
+For-All DEP-DESCRIPTORS:
+  if( NEED-BIN-ARTEFACT )
+    if(ARCHITECTURES is NOT included in DEP-DESCRIPTOR)
+      load SOURCES und COPY .h TO source(HEADERS)
+    else
+      load HEADERS
+    For-All ARCHITECTURES
+      if(ARCHITECTURE is NOT included in DEP-DESCRIPTOR)
+        compile and generate architecture
+        -> solve dependencies for include path
+  else
+    load HEADERS
+
+
+A -> B D E
+B -> C
+C -> D
+D -> C
+E -> F
+
+1. Artefakte besorgen bzw prüfen, ob schon vorhanden ist (*=aktuell nur als Source vorhanden, +=System-Library):
+   B*
+   C*
+   D*
+   E+
+   F
+
+2. FOR-LOOP
+   Solange Source-Artefakten vorhanden sind führe folgende Schritte durch
+   - Nehme beliebiges Sourcen-Artefakt
+   - bestimme seine kompletten Abhängigkeiten
+   - compiliere es mit entsprechenden Includes
+   
+   1. Durchlauf
+      B* -> C* D*
+      
+      neue Situation:
+      B
+      C*
+      D*
+      E+
+      F
+   
+   2. Durchlauf
+      C* -> D*
+      
+      neue Situation:
+      B
+      C
+      D*
+      E+
+      F
+   
+   3. Durchlauf
+      D* -> C
+      
+      neue Situation:
+      B
+      C
+      D
+      E+
+      F
+
