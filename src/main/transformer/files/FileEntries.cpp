@@ -15,19 +15,19 @@ FileEntries::FileEntries() {
 FileEntries::~FileEntries() {
 }
 
-void FileEntries::loadDirectory(const boost::filesystem::path& path) {
+void FileEntries::loadDirectory(const std::filesystem::path& path) {
 	entries.clear();
-	if(boost::filesystem::exists(path) == false) {
+	if(std::filesystem::exists(path) == false) {
 		return;
 	}
-	if(boost::filesystem::is_directory(path) == false) {
+	if(std::filesystem::is_directory(path) == false) {
 		throw esl::system::Stacktrace::add(std::runtime_error("Path " + path.generic_string() + " exists but it is no directory"));
 	}
-	boost::filesystem::directory_iterator endIter;
-	for( boost::filesystem::directory_iterator iter(path); iter != endIter; ++iter) {
-	//for (boost::filesystem::directory_entry& dirEntry : boost::filesystem::directory_iterator(path)) {
-		if(boost::filesystem::is_directory(iter->status())) {
-		//if (boost::filesystem::is_directory(dirEntry)) {
+	std::filesystem::directory_iterator endIter;
+	for( std::filesystem::directory_iterator iter(path); iter != endIter; ++iter) {
+	//for (std::filesystem::directory_entry& dirEntry : std::filesystem::directory_iterator(path)) {
+		if(std::filesystem::is_directory(iter->status())) {
+		//if (std::filesystem::is_directory(dirEntry)) {
 			FileEntry entry;
 			entry.isDirectory = true;
 
@@ -39,8 +39,8 @@ void FileEntries::loadDirectory(const boost::filesystem::path& path) {
 			entries.push_back(std::move(entry));
 			continue;
 		}
-		if (boost::filesystem::is_regular(iter->status())) {
-		//if (boost::filesystem::is_regular(dirEntry)) {
+		if (std::filesystem::is_regular_file(iter->status())) {
+		//if (std::filesystem::is_regular(dirEntry)) {
 			FileEntry entry;
 			entry.isDirectory = false;
 
@@ -133,7 +133,7 @@ FileEntries FileEntries::makeFlat() const {
 	return result;
 }
 
-FileEntries FileEntries::makePrefix(const boost::filesystem::path& path) const {
+FileEntries FileEntries::makePrefix(const std::filesystem::path& path) const {
 	FileEntry tmpEntry;
 	tmpEntry.name = path;
 	tmpEntry.isDirectory = true;
@@ -218,7 +218,7 @@ FileEntries FileEntries::filterByExtension(std::string extension) const {
 	});
 }
 
-FileEntries FileEntries::filterByExtensions(const std::vector<boost::filesystem::path>& extensions) const {
+FileEntries FileEntries::filterByExtensions(const std::vector<std::filesystem::path>& extensions) const {
 	return filter([&extensions](const FileEntry& entry) {
 		for(const auto& extension : extensions) {
 			if(entry.name.extension() == extension) {
@@ -241,7 +241,7 @@ void FileEntries::print(const std::string& prefix) const {
 	}
 }
 
-void FileEntries::syncDirectoryStructure(const FileEntries& entriesActual, const FileEntries& entriesTarget, const boost::filesystem::path& path, bool withDelete) {
+void FileEntries::syncDirectoryStructure(const FileEntries& entriesActual, const FileEntries& entriesTarget, const std::filesystem::path& path, bool withDelete) {
 	FileEntries difference;
 	FileEntries entriesActualDirs = entriesActual.filter([](const FileEntry& entry) { return entry.isDirectory; });
 	FileEntries entriesTargetDirs = entriesTarget.filter([](const FileEntry& entry) { return entry.isDirectory; });
@@ -252,35 +252,35 @@ void FileEntries::syncDirectoryStructure(const FileEntries& entriesActual, const
 	}
 
 	difference = entriesActualDirs - entriesTargetDirs;
-	if(boost::filesystem::exists(path) == false) {
+	if(std::filesystem::exists(path) == false) {
 		Execute::mkdir(path);
-	} else if(boost::filesystem::is_directory(path) == false) {
+	} else if(std::filesystem::is_directory(path) == false) {
 		throw esl::system::Stacktrace::add(std::runtime_error("Path " + path.generic_string() + " exists but it is no directory"));
 	}
 
 	createDirectories(path, difference);
 }
 
-void FileEntries::createDirectories(const boost::filesystem::path& path, const FileEntries& entries) {
+void FileEntries::createDirectories(const std::filesystem::path& path, const FileEntries& entries) {
 	for(const auto& entry : entries.getList()) {
 		if(!entry.isDirectory) {
 			continue;
 		}
 
-		boost::filesystem::path tmpPath(path);
+		std::filesystem::path tmpPath(path);
 		tmpPath /= entry.name;
 		Execute::mkdir(tmpPath);
 		createDirectories(tmpPath, entry.entries);
 	}
 }
 
-void FileEntries::deleteDirectories(const boost::filesystem::path& path, const FileEntries& entries) {
+void FileEntries::deleteDirectories(const std::filesystem::path& path, const FileEntries& entries) {
 	for(const auto& entry : entries.getList()) {
 		if(!entry.isDirectory) {
 			continue;
 		}
 
-		boost::filesystem::path tmpPath(path);
+		std::filesystem::path tmpPath(path);
 		tmpPath /= entry.name;
 		deleteDirectories(tmpPath, entry.entries);
 		Execute::removeAll(tmpPath);

@@ -6,25 +6,26 @@
 #include <transformer/repository/RepositoryLocal.h>
 #include <transformer/Transformer.h>
 
-#include <esl/logging/Logging.h>
+#include <esl/monitoring/Logging.h>
+#include <esl/plugin/Registry.h>
 #include <esl/system/Stacktrace.h>
 #include <esl/utility/String.h>
 
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-#include <stdlib.h> // getenv(...)
 #include <cstdlib> // getenv(...)
 
-#include <transformer/architectures/solver/Solver.h>
+//#include <transformer/architectures/solver/Solver.h>
 namespace transformer {
 namespace {
 Logger logger("transformer::Transformer");
-
+/*
 void printBuildConfigTest(const architectures::Specifiers& specifiers) {
 	architectures::solver::Solver solver(specifiers, {"c++11", "linux", "gcc"});
 	std::map<std::set<std::string>, architectures::Architecture> architectures = solver.getBuildArchitectures();
-std::cout << "Found " << architectures.size() << " architectures.\n";
+
+    std::cout << architectures.size() << " architectures found:\n";
 	int i=0;
 	for(const auto& architectureEntry : architectures) {
 		std::cout << "Entry #" << ++i << ":\n";
@@ -59,16 +60,218 @@ std::cout << "Found " << architectures.size() << " architectures.\n";
 
 	}
 }
+*/
+
+std::string readValue(std::size_t& index, const std::vector<std::string>& arguments) {
+	std::size_t pos = arguments[index].find('=');
+	if(pos != std::string::npos) {
+		return arguments[index].substr(pos+1);
+	}
+
+	if(arguments.size() <= index+1) {
+		return "";
+	}
+
+	++index;
+	return arguments[index];
 }
 
-Transformer::Transformer(int argc, char **argv)
-{
-	for(int i=0; i<argc; ++i) {
-		arguments.push_back(argv[i]);
+std::vector<std::string> readValues(const std::string& value) {
+	return esl::utility::String::split(value, ',', true);
+}
+
+void setValue(std::string& dst, const std::string& src, const std::string& key) {
+	if(!dst.empty()) {
+		throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter '" + key + "'"));
+	}
+
+	dst = src;
+
+	if(dst.empty()) {
+		throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"\" for parameter '" + key + "'"));
 	}
 }
 
-void Transformer::loadSettings() {
+void setValue(unsigned short& dst, const std::string& src, const std::string& key) {
+	if(dst == 0) {
+		throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter '" + key + "'"));
+	}
+
+	int i = std::stoi(src);
+	if(i < 0 || i > std::numeric_limits<unsigned short>::max()) {
+		throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"" + src + "\" for parameter '" + key + "'"));
+	}
+	dst = static_cast<unsigned short>(i);
+}
+
+void setValue(std::set<std::string>& dst, const std::string& src, const std::string& key) {
+	if(!dst.empty()) {
+		throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter '" + key + "'"));
+	}
+
+	std::vector<std::string> values = readValues(src);
+	for(const auto& value : values) {
+		if(value.empty()) {
+			continue;
+		}
+		dst.insert(value);
+	}
+	if(dst.empty()) {
+        throw esl::system::Stacktrace::add(std::runtime_error("Missing argument for parameter '" + key + "'"));
+	}
+}
+
+void setValue(std::set<Transformer::Generators>& dst, const std::string& src, const std::string& key) {
+	if(!dst.empty()) {
+		throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter '" + key + "'"));
+	}
+
+	std::vector<std::string> values = readValues(src);
+	for(const auto& value : values) {
+		if(value == "cdt-project") {
+			dst.insert(Transformer::Generators::cdtProject);
+		}
+		else if(value == "make") {
+			dst.insert(Transformer::Generators::make);
+		}
+		else if(value == "cmake") {
+			dst.insert(Transformer::Generators::cmake);
+		}
+		else if(value == "meson") {
+			dst.insert(Transformer::Generators::meson);
+		}
+		else if(!value.empty()) {
+			throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"" + src + "\" for parameter '" + key + "'"));
+		}
+	}
+	if(dst.empty()) {
+        throw esl::system::Stacktrace::add(std::runtime_error("Missing argument for parameter '" + key + "'"));
+	}
+}
+} /* anonymous namespace */
+
+
+Transformer::Settings::Settings(int argc, char **argv) {
+	std::vector<std::string> arguments;
+	for(int i=0; i<argc; ++i) {
+		arguments.push_back(argv[i]);
+	}
+
+	for(std::size_t index = 0; index < arguments.size(); ++index) {
+		if(arguments[index] == "clean") {
+			commands.push_back(Transformer::Commands::clean);
+		}
+		else if(arguments[index] == "dependencies") {
+			commands.push_back(Transformer::Commands::dependencies);
+		}
+		else if(arguments[index] == "generate-sources") {
+			commands.push_back(Transformer::Commands::generateSources);
+		}
+		else if(arguments[index] == "compile") {
+			commands.push_back(Transformer::Commands::compile);
+		}
+		else if(arguments[index] == "test") {
+			commands.push_back(Transformer::Commands::test);
+		}
+		else if(arguments[index] == "link") {
+			commands.push_back(Transformer::Commands::link);
+		}
+		else if(arguments[index] == "site") {
+			commands.push_back(Transformer::Commands::site);
+		}
+		else if(arguments[index] == "package") {
+			commands.push_back(Transformer::Commands::package);
+		}
+		else if(arguments[index] == "install") {
+			commands.push_back(Transformer::Commands::install);
+		}
+		else if(arguments[index] == "provide") {
+			commands.push_back(Transformer::Commands::provide);
+		}
+
+
+		else if(arguments[index] == "only-generate-sources") {
+			commands.push_back(Transformer::Commands::onlyGenerateSources);
+		}
+		else if(arguments[index] == "only-compile") {
+			commands.push_back(Transformer::Commands::onlyCompile);
+		}
+		else if(arguments[index] == "only-test") {
+			commands.push_back(Transformer::Commands::onlyTest);
+		}
+		else if(arguments[index] == "only-link") {
+			commands.push_back(Transformer::Commands::onlyLink);
+		}
+		else if(arguments[index] == "only-site") {
+			commands.push_back(Transformer::Commands::onlySite);
+		}
+		else if(arguments[index] == "only-package") {
+			commands.push_back(Transformer::Commands::onlyPackage);
+		}
+		else if(arguments[index] == "only-install") {
+			commands.push_back(Transformer::Commands::onlyInstall);
+		}
+		else if(arguments[index] == "only-provide") {
+			commands.push_back(Transformer::Commands::onlyProvide);
+		}
+		else {
+			std::size_t pos = arguments[index].find('=');
+			std::string key = arguments[index].substr(0, pos);
+
+			/* if arguments[index] == "<key>=<more>"
+			 *    return '<more>'
+			 * if arguments[index] == "<key>"
+			 *    return arguments[index+1] and increment index-reference
+			 */
+			const std::string value = readValue(index, arguments);
+
+
+			if(key == "build-file") {
+				setValue(buildFile, value, key);
+			}
+			else if(key == "bash-script") {
+				setValue(scriptFile, value, key);
+			}
+			else if(key == "logger") {
+				setValue(loggerFile, value, key);
+			}
+			else if(key == "architecture") {
+				setValue(optionArchitectures, value, key);
+			}
+			else if(key == "variant") {
+				setValue(optionVariants, value, key);
+			}
+			else if(key == "parallel-count") {
+				setValue(parallelCount, value, key);
+			}
+			else if(key == "generate") {
+				setValue(generators, value, key);
+			}
+			else {
+				throw std::invalid_argument("unknown argument \"" + arguments[index] + "\"");
+			}
+		}
+	}
+
+	if(buildFile.empty()) {
+		buildFile = "tbuild.cfg";
+	}
+
+	if(parallelCount == 0) {
+		parallelCount = 20;
+	}
+
+	if(!loggerFile.empty()) {
+	    esl::monitoring::Logging* logging = esl::plugin::Registry::get().findObject<esl::monitoring::Logging>();
+		if(logging) {
+			logging->addFile(loggerFile);
+		}
+	}
+}
+
+Transformer::Transformer(int argc, char **argv)
+: settings(argc, argv)
+{
 	const char* envVar = nullptr;
 
 	envVar = std::getenv("TBUILD_HOME");
@@ -76,72 +279,133 @@ void Transformer::loadSettings() {
 		localRepoPath = envVar;
 	}
 	else {
-		boost::filesystem::path homePath;
 		envVar = std::getenv("HOME");
 		if(envVar == nullptr) {
 			throw std::runtime_error("No HOME variable found");
 		}
-		homePath = envVar;
-
-/*
-		boost::filesystem::path settingsPath = homePath;
-		settingsPath /= ".tbuild";
-		settingsPath /= "settings.cfg";
-*/
-		localRepoPath = homePath;
-		localRepoPath /= ".tbuild";
+		localRepoPath = std::filesystem::path(envVar) / ".tbuild";
 	}
-
 	logger.info << "localRepoPath=\"" << localRepoPath.generic_string() << "\"\n";
 
-	database.setLocalRepositoryPath(localRepoPath);
-
-	loadArchitectures();
-/*
-	static transformer::repository::RepositoryLocal repositoryCodeHouse;
-	repositoryCodeHouse.setPath("/home/a0ca1e4/.xbuild-codehouse");
-	database.addRepository("codehouse", repositoryCodeHouse);
-*/
-}
-
-void Transformer::loadArchitectures() {
-	boost::filesystem::path architecturesPath;
-	const char* envVar = nullptr;
-
+	std::filesystem::path architecturesPath;
 	envVar = std::getenv("TBUILD_ARCHITECTURES");
 	if(envVar) {
 		architecturesPath = envVar;
 	}
 	else {
-		architecturesPath = localRepoPath;
-		architecturesPath /= "architecture-global.cfg";
+		architecturesPath = localRepoPath / "architecture-global.cfg";
 	}
+	logger.info << "architecturesPath=\"" << architecturesPath.generic_string() << "\"\n";
 
+	/* define local and remote repositories */
+	database.setLocalRepositoryPath(localRepoPath);
+	/*
+		static transformer::repository::RepositoryLocal repositoryCodeHouse;
+		repositoryCodeHouse.setPath("/home/user/.xbuild-codehouse");
+		database.addRepository("codehouse", repositoryCodeHouse);
+	*/
+
+	/* load architectures */
 	{
 		architectures::Config config(specifiers);
 		config.load(architecturesPath);
+		//config.save(std::cout);
 	}
-/*
-	{
-		architectures::Config config(specifiers);
-		config.save(std::cout);
-	}
-
-	specifiers.print();
-*/
-	printBuildConfigTest(specifiers);
+	//specifiers.print();
+	//printBuildConfigTest(specifiers);
 }
 
-void Transformer::loadDescriptor() {
-	descriptor = database.loadDescriptor(buildFile);
+int Transformer::run() {
+	int exitCode = 0;
 
-	if(descriptor) {
-		printDescriptor();
+	loadDescriptor();
+
+	if(!settings.scriptFile.empty()) {
+		Execute::run("rm -r " + settings.scriptFile);
+		Execute::run("touch " + settings.scriptFile);
+		Execute::run("chmod +x " + settings.scriptFile);
+		Config::scriptFile = settings.scriptFile;
+		Execute::addLineToScript("#!/bin/sh");
+		Execute::addLineToScript("");
+		Execute::addLineToScript("set -x");
 	}
-	else {
-		std::cerr << "failed to load file \"" << buildFile << "\n";
-		buildManager.reset();
+
+	if(settings.generators.count(Transformer::Generators::cdtProject) > 0) {
+		if(settings.optionArchitectures.empty()) {
+	        throw esl::system::Stacktrace::add(std::runtime_error("Missing architecture. An architecture has to be specified if calling \"generate cdt-project\"."));
+		}
+		if(settings.optionArchitectures.size() > 1) {
+	        throw esl::system::Stacktrace::add(std::runtime_error("Too many architectures. There has been only one architecture be specified if calling \"generate cdt-project\"."));
+		}
+
+		std::string architecture = *settings.optionArchitectures.begin();
+		getBuildManager().generateCdtProject(settings.optionVariants, architecture);
 	}
+
+	/* not read and execute commands */
+	for(auto command : settings.commands) {
+		switch(command) {
+		case Commands::clean:
+			getBuildManager().makeClean();
+			break;
+		case Commands::dependencies:
+			exitCode = getBuildManager().makeDependencies();
+			break;
+		case Commands::generateSources:
+			exitCode = getBuildManager().makeGenerateSources();
+			break;
+		case Commands::compile:
+			exitCode = getBuildManager().makeCompile();
+			break;
+		case Commands::test:
+			exitCode = getBuildManager().makeTest();
+			break;
+		case Commands::link:
+			exitCode = getBuildManager().makeLink();
+			break;
+		case Commands::site:
+			exitCode = getBuildManager().makeSite();
+			break;
+		case Commands::package:
+			exitCode = getBuildManager().makePackage();
+			break;
+		case Commands::install:
+			exitCode = getBuildManager().makeInstall();
+			break;
+		case Commands::provide:
+			exitCode = getBuildManager().makeProvide();
+			break;
+		case Commands::onlyDependencies:
+			exitCode = getBuildManager().onlyDependencies();
+			break;
+		case Commands::onlyGenerateSources:
+			exitCode = getBuildManager().onlyGenerateSources();
+			break;
+		case Commands::onlyCompile:
+			exitCode = getBuildManager().onlyCompile();
+			break;
+		case Commands::onlyTest:
+			exitCode = getBuildManager().onlyTest();
+			break;
+		case Commands::onlyLink:
+			exitCode = getBuildManager().onlyLink();
+			break;
+		case Commands::onlySite:
+			exitCode = getBuildManager().onlySite();
+			break;
+		case Commands::onlyPackage:
+			exitCode = getBuildManager().onlyPackage();
+			break;
+		case Commands::onlyInstall:
+			exitCode = getBuildManager().onlyInstall();
+			break;
+		case Commands::onlyProvide:
+			exitCode = getBuildManager().onlyProvide();
+			break;
+		}
+	}
+
+	return exitCode;
 }
 
 void Transformer::printUsage() {
@@ -187,340 +451,26 @@ void Transformer::printUsage() {
 	std::cout << "  make\n";
 	std::cout << "  cmake\n";
 	std::cout << "  meson\n";
-}
-
-std::size_t Transformer::checkArguments() const {
-	for(std::size_t index = 0; index < arguments.size(); ++index) {
-		if(arguments[index] == "clean"
-		|| arguments[index] == "dependencies"
-		|| arguments[index] == "generate-sources"
-		|| arguments[index] == "compile"
-		|| arguments[index] == "test"
-		|| arguments[index] == "link"
-		|| arguments[index] == "site"
-		|| arguments[index] == "package"
-		|| arguments[index] == "install"
-		|| arguments[index] == "provide"
-		|| arguments[index] == "only-dependencies"
-		|| arguments[index] == "only-generate-sources"
-		|| arguments[index] == "only-compile"
-		|| arguments[index] == "only-test"
-		|| arguments[index] == "only-link"
-		|| arguments[index] == "only-site"
-		|| arguments[index] == "only-package"
-		|| arguments[index] == "only-install"
-		|| arguments[index] == "only-provide") {
-			continue;
-		}
-
-		std::size_t pos = arguments[index].find('=');
-		std::string key = arguments[index].substr(0, pos);
-
-#if 1
-		std::vector<std::string> values = readValues(index);
-		if(values.empty()) {
-			return 0;
-		}
-#else
-		std::pair<std::vector<std::string>,std::size_t> valuesPair = readValues(index);
-		std::vector<std::string>& values = valuesPair.first;
-		if(valuesPair.second != npos) {
-			return valuesPair.second;
-		}
-#endif
-		if(key == "generate") {
-			for(const auto& value : values) {
-				if(value != "cdt-project"
-				&& value != "make"
-				&& value != "cmake"
-				&& value != "meson") {
-					return index;
-				}
-			}
-			continue;
-		}
-
-		if(key == "architecture"
-		|| key == "variant"
-		|| key == "build-file"
-		|| key == "logger"
-		|| key == "parallel-count"
-		|| key == "bash-script") {
-			if(values.size() != 1) {
-				return index;
-			}
-			continue;
-		}
-
-		return index;
-	}
-
-	return npos;
-}
-
-int Transformer::run() {
-	int exitCode = 0;
-
-	if(arguments.empty()) {
-		return 3;
-	}
-
-
-	bool hasBuildFile = false;
-	bool hasParallelCount = false;
-	std::string loggerFile;
-	/* check for build-file and parallel-count option */
-	for(std::size_t index = 0; exitCode == 0 && index < arguments.size(); ++index) {
-		std::size_t pos = arguments[index].find('=');
-		std::string key = arguments[index].substr(0, pos);
-
-		if(key == "build-file") {
-			if(hasBuildFile) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter 'build-file'"));
-			}
-
-			hasBuildFile = true;
-			buildFile = readValue(index);
-
-			if(buildFile.empty()) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"\" for parameter 'build-file'"));
-			}
-		}
-
-		else if(key == "parallel-count") {
-			if(hasParallelCount) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter 'parallel-count'"));
-			}
-			hasParallelCount = true;
-
-			std::string value = readValue(index);
-			int i = std::stoi(value);
-			if(i < 0 || i > std::numeric_limits<unsigned short>::max()) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"" + value + "\" for parameter 'parallel-count'"));
-			}
-			Config::parallelCount = static_cast<unsigned short>(i);
-		}
-
-		else if(key == "bash-script") {
-			if(!Config::scriptFile.empty()) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter 'bash-script'"));
-			}
-
-			const std::string value = readValue(index);
-
-			if(value.empty()) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"\" for parameter 'bash-script'"));
-			}
-			Execute::run("rm -r " + value);
-			Execute::run("touch " + value);
-			Execute::run("chmod +x " + value);
-			Config::scriptFile = value;
-			Execute::addLineToScript("#!/bin/sh");
-			Execute::addLineToScript("");
-			Execute::addLineToScript("set -x");
-		}
-
-		else if(key == "logger") {
-			if(!loggerFile.empty()) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Multiple definition of parameter 'logger'"));
-			}
-
-			loggerFile = readValue(index);
-
-			if(loggerFile.empty()) {
-				throw esl::system::Stacktrace::add(std::runtime_error("Invalid value \"\" for parameter 'logger'"));
-			}
-			esl::logging::Logging::initWithFile(loggerFile);
-		}
-	}
-
-	loadDescriptor();
-
-	/* first: just read options */
-	for(std::size_t index = 0; exitCode == 0 && index < arguments.size(); ++index) {
-		std::size_t pos = arguments[index].find('=');
-		std::string key = arguments[index].substr(0, pos);
-
-		if(key == "generate") {
-		}
-		else if(key == "architecture") {
-		}
-		else if(key == "variant") {
-		}
-		else {
-			continue;
-		}
-
-#if 1
-		std::vector<std::string> values = readValues(index);
-		if(values.empty()) {
-#else
-		std::pair<std::vector<std::string>,std::size_t> valuesPair = readValues(index);
-		std::vector<std::string>& values = valuesPair.first;
-		if(valuesPair.second != npos) {
-#endif
-	        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: missing argument for \"" + key + "\" command at index [" + std::to_string(index) + "]."));
-		}
-
-		if(key == "architecture") {
-			hasOptionArchitectures = true;
-			for(const auto& value : values) {
-				optionArchitectures.insert(value);
-			}
-			continue;
-		}
-
-		if(key == "variant") {
-			hasOptionVariants = true;
-			for(const auto& value : values) {
-				if(value.empty()) {
-					optionVariants.insert(getDescriptor().getDefaultVariantName());
-				}
-				else {
-					optionVariants.insert(value);
-				}
-			}
-			continue;
-		}
-	}
-
-	/* not read and execute commands */
-	for(std::size_t index = 0; exitCode == 0 && index < arguments.size(); ++index) {
-		if(arguments[index] == "clean") {
-			getBuildManager().makeClean();
-			continue;
-		}
-		if(arguments[index] == "dependencies") {
-			exitCode = getBuildManager().makeDependencies();
-			continue;
-		}
-		if(arguments[index] == "generate-sources") {
-			exitCode = getBuildManager().makeGenerateSources();
-			continue;
-		}
-		if(arguments[index] == "compile") {
-			exitCode = getBuildManager().makeCompile();
-			continue;
-		}
-		if(arguments[index] == "test") {
-			exitCode = getBuildManager().makeTest();
-			continue;
-		}
-		if(arguments[index] == "link") {
-			exitCode = getBuildManager().makeLink();
-			continue;
-		}
-		if(arguments[index] == "site") {
-			exitCode = getBuildManager().makeSite();
-			continue;
-		}
-		if(arguments[index] == "package") {
-			exitCode = getBuildManager().makePackage();
-			continue;
-		}
-		if(arguments[index] == "install") {
-			exitCode = getBuildManager().makeInstall();
-			continue;
-		}
-		if(arguments[index] == "provide") {
-			exitCode = getBuildManager().makeProvide();
-			continue;
-		}
-		if(arguments[index] == "only-dependencies") {
-			exitCode = getBuildManager().onlyDependencies();
-			continue;
-		}
-		if(arguments[index] == "only-generate-sources") {
-			exitCode = getBuildManager().onlyGenerateSources();
-			continue;
-		}
-		if(arguments[index] == "only-compile") {
-			exitCode = getBuildManager().onlyCompile();
-			continue;
-		}
-		if(arguments[index] == "only-test") {
-			exitCode = getBuildManager().onlyTest();
-			continue;
-		}
-		if(arguments[index] == "only-link") {
-			exitCode = getBuildManager().onlyLink();
-			continue;
-		}
-		if(arguments[index] == "only-site") {
-			exitCode = getBuildManager().onlySite();
-			continue;
-		}
-		if(arguments[index] == "only-package") {
-			exitCode = getBuildManager().onlyPackage();
-			continue;
-		}
-		if(arguments[index] == "only-install") {
-			exitCode = getBuildManager().onlyInstall();
-			continue;
-		}
-		if(arguments[index] == "only-provide") {
-			exitCode = getBuildManager().onlyProvide();
-			continue;
-		}
-
-		std::size_t pos = arguments[index].find('=');
-		std::string key = arguments[index].substr(0, pos);
-#if 1
-		std::vector<std::string> values = readValues(index);
-		if(values.empty()) {
-#else
-		std::pair<std::vector<std::string>,std::size_t> valuesPair = readValues(index);
-		std::vector<std::string>& values = valuesPair.first;
-		if(valuesPair.second != npos) {
-#endif
-	        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: missing argument for \"" + key + "\" command at index [" + std::to_string(index) + "]."));
-		}
-
-		if(key == "architecture"
-		|| key == "variant"
-		|| key == "build-file"
-		|| key == "parallel-count"
-		|| key == "bash-script"
-		|| key == "logger") {
-			continue;
-		}
-
-		if(key == "generate") {
-			for(const auto& value : values) {
-				if(value == "cdt-project") {
-					if(hasOptionArchitectures == false || optionArchitectures.empty()) {
-				        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: missing architecture. An architecture has to be specified if calling \"generate cdt-project\"."));
-					}
-					if(optionArchitectures.size() > 1) {
-				        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: too many architectures. There has been only one architecture be specified if calling \"generate cdt-project\"."));
-					}
-
-					if(hasOptionVariants && optionVariants.empty()) {
-				        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: This should never happen. Variants have been specified but variants list is empty."));
-					}
-
-					std::string architecture = *optionArchitectures.begin();
-					getBuildManager().generateCdtProject(optionVariants, architecture);
-				}
-				else if(value == "make"
-				|| value == "cmake"
-				|| value == "meson") {
-					continue;
-				}
-				else {
-			        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: unknown generator: arguments[" + std::to_string(index) + "] = \"" + arguments[index] + "\"."));
-				}
-			}
-			continue;
-		}
-
-		throw esl::system::Stacktrace::add(std::runtime_error("ERROR: unknown argument \"" + key + "\"."));
-	}
-
-	return exitCode;
+	std::cout << "\n";
+	std::cout << "environment variables:\n";
+	std::cout << "  TBUILD_HOME            Defines directory for local repository. Default is \"${HOME}/.tbuild/\" .\n";
+	std::cout << "  TBUILD_ARCHITECTURES   Defines config file for architecture definitions. Default is \"${TBUILD_HOME}/architecture-global.cfg\"\n";
+	std::cout << "\n";
 }
 
 const std::size_t Transformer::npos = std::numeric_limits<std::size_t>::max();
+
+void Transformer::loadDescriptor() {
+	descriptor = database.loadDescriptor(settings.buildFile);
+
+	if(descriptor) {
+		printDescriptor();
+	}
+	else {
+		std::cerr << "failed to load file \"" << settings.buildFile << "\n";
+		buildManager.reset();
+	}
+}
 
 const model::Descriptor& Transformer::getDescriptor() const {
 	if(!descriptor) {
@@ -539,73 +489,11 @@ void Transformer::printDescriptor() const {
 
 build::BuildManager& Transformer::getBuildManager() {
 	if(!buildManager) {
-		if(hasOptionVariants && optionVariants.empty()) {
-	        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: Variants have been specified but variant-list is empty."));
-		}
-
-		if(hasOptionArchitectures && optionArchitectures.empty()) {
-	        throw esl::system::Stacktrace::add(std::runtime_error("ERROR: Architectures have been specified but architecture-list is empty."));
-		}
-
-		buildManager.reset(new transformer::build::BuildManager(database, getDescriptor(), optionVariants, optionArchitectures));
+		buildManager.reset(new transformer::build::BuildManager(database, getDescriptor(), settings.optionVariants, settings.optionArchitectures));
 		buildManager->addBuilderFactory(builderFactoryGCC);
 	}
 
 	return *buildManager.get();
 }
-
-std::string Transformer::readValue(std::size_t& index) const {
-	std::size_t pos = arguments[index].find('=');
-	if(pos != std::string::npos) {
-		return arguments[index].substr(pos+1);
-	}
-
-	if(arguments.size() <= index+1) {
-		return "";
-	}
-
-	++index;
-	return arguments[index];
-}
-#if 1
-std::vector<std::string> Transformer::readValues(std::size_t& index) const {
-	return esl::utility::String::split(readValue(index), ',', true);
-}
-#else
-std::pair<std::vector<std::string>,std::size_t> Transformer::readValues(std::size_t& index) const {
-	std::pair<std::vector<std::string>,std::size_t> result;
-
-	result.second = npos;
-	std::size_t pos = arguments[index].find('=');
-	if(pos == std::string::npos) {
-		if(arguments.size() <= index+1) {
-			result.second = index;
-			return result;
-		}
-		++index;
-		result.first  = splitValues(arguments[index]);
-	}
-	else {
-		result.first  = splitValues(arguments[index].substr(pos+1));
-	}
-
-	return result;
-}
-
-std::vector<std::string> Transformer::splitValues(std::string values) {
-	std::vector<std::string> result;
-
-	std::size_t pos = values.find(',');
-	result.emplace_back(values.substr(0, pos));
-
-	while(pos != std::string::npos) {
-		values = values.substr(pos+1);
-		pos = values.find(',');
-		result.emplace_back(values.substr(0, pos));
-	}
-
-	return result;
-}
-#endif
 
 } /* namespace transformer */

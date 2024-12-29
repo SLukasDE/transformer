@@ -7,17 +7,17 @@
 namespace transformer {
 namespace files {
 
-Source::Source(const boost::filesystem::path& aPath)
+Source::Source(const std::filesystem::path& aPath)
 : path(aPath)
 {
 }
 
-void Source::setPath(const boost::filesystem::path& aPath) {
+void Source::setPath(const std::filesystem::path& aPath) {
 	path = aPath;
 	invalidateFileEntries();
 }
 
-const boost::filesystem::path& Source::getPath() const {
+const std::filesystem::path& Source::getPath() const {
 	return path;
 }
 

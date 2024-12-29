@@ -8,7 +8,7 @@
 #include <esl/system/Transceiver.h>
 #include <esl/system/FileDescriptor.h>
 #include <esl/system/Environment.h>
-#include <esl/utility/Signal.h>
+#include <esl/system/Signal.h>
 
 #include <memory>
 #include <string>
@@ -34,7 +34,7 @@ public:
 
 	int execute(esl::system::Arguments arguments) const override;
 
-	void sendSignal(const esl::utility::Signal& signal) const override;
+	void sendSignal(const esl::system::Signal& signal) const override;
 	const void* getNativeHandle() const override;
 
 private:

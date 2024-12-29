@@ -17,11 +17,11 @@ DescriptorWriter::DescriptorWriter(const model::Descriptor& aDescriptor)
 DescriptorWriter::~DescriptorWriter() {
 }
 
-void DescriptorWriter::write(const boost::filesystem::path path) const {
-	if(!boost::filesystem::exists(path)) {
+void DescriptorWriter::write(const std::filesystem::path path) const {
+	if(!std::filesystem::exists(path)) {
 		throw esl::system::Stacktrace::add(std::runtime_error("File \"" + path.generic_string() + "\" does not exists."));
 	}
-	if(!boost::filesystem::is_regular(path)) {
+	if(!std::filesystem::is_regular_file(path)) {
 		throw esl::system::Stacktrace::add(std::runtime_error("Path \"" + path.generic_string() + "\" is not a file."));
 	}
 	std::ofstream ostream(path.string());

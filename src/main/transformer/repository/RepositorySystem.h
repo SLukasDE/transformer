@@ -1,10 +1,12 @@
 #ifndef TRANSFORMER_REPOSITORY_REPOSITORYSYSTEM_H_
 #define TRANSFORMER_REPOSITORY_REPOSITORYSYSTEM_H_
 
+#include <filesystem>
 #include <string>
 #include <vector>
 #include <map>
 #include <set>
+
 #include <transformer/repository/Repository.h>
 #include <transformer/model/SystemPath.h>
 
@@ -24,12 +26,12 @@ public:
 
 	std::unique_ptr<model::Descriptor> loadDescriptor(const std::string& artefactId, const std::string& artefactVersion) const override;
 
-	void copyArtefactSource(const std::string& artefactId, const std::string& variant, const std::string& version, const boost::filesystem::path& toPath) const override;
-	void copyArtefactHeaders(const std::string& artefactId, const std::string& variant, const std::string& version, const boost::filesystem::path& toPath) const override;
-	void copyArtefactStaticLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const override;
-	void copyArtefactDynamicLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const override;
-	void copyArtefactExecutable(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const override;
-	void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath) const override;
+	void copyArtefactSource(const std::string& artefactId, const std::string& variant, const std::string& version, const std::filesystem::path& toPath) const override;
+	void copyArtefactHeaders(const std::string& artefactId, const std::string& variant, const std::string& version, const std::filesystem::path& toPath) const override;
+	void copyArtefactStaticLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const override;
+	void copyArtefactDynamicLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const override;
+	void copyArtefactExecutable(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const override;
+	void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath) const override;
 
 	void addAdditionalLibrary(const std::string& artefactId, const std::string& libraryName, const std::string& includePath, const std::string& libraryPath);
 	const std::string& getLibraryName(const std::string& artefactId) const;

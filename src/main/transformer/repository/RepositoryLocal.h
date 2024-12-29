@@ -1,12 +1,10 @@
 #ifndef TRANSFORMER_REPOSITORY_REPOSITORYLOCAL_H_
 #define TRANSFORMER_REPOSITORY_REPOSITORYLOCAL_H_
 
+#include <vector>
 #include <string>
 #include <vector>
 #include <set>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <transformer/files/Source.h>
 #include <transformer/repository/Repository.h>
@@ -18,11 +16,11 @@ namespace repository {
 
 class RepositoryLocal : public Repository {
 public:
-//	RepositoryLocal(boost::filesystem::path path);
+//	RepositoryLocal(std::filesystem::path path);
 	RepositoryLocal() = default;
 	~RepositoryLocal() = default;
 
-	void setPath(const boost::filesystem::path path);
+	void setPath(const std::filesystem::path path);
 
 	bool hasArtefactVersion(const std::string& artefactId, const std::string& artefactVersion) const override;
 	bool hasApiVersion(const std::string& artefactId, const std::string& apiVersion) const override;
@@ -34,12 +32,12 @@ public:
 
 	void uploadDescriptor(const model::Descriptor& descriptor) const;
 
-	void uploadArtefactSource(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const;
-	void uploadArtefactHeaders(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const;
-	void uploadArtefactStaticLib(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const;
-	void uploadArtefactDynamicLib(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const;
-	void uploadArtefactExecutable(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const;
-	void uploadArtefactGenerated(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture, const std::string& generatorId) const;
+	void uploadArtefactSource(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const;
+	void uploadArtefactHeaders(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const;
+	void uploadArtefactStaticLib(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const;
+	void uploadArtefactDynamicLib(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const;
+	void uploadArtefactExecutable(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const;
+	void uploadArtefactGenerated(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture, const std::string& generatorId) const;
 
 	void saveArtefactSource(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant) const;
 	void saveArtefactHeaders(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant) const;
@@ -48,22 +46,22 @@ public:
 	void saveArtefactExecutable(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const;
 	void saveArtefactGenerated(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId) const;
 
-	void copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath) const override;
-	void copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath) const override;
-	void copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) const override;
-	void copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) const override;
-	void copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) const override;
-	void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath) const override;
+	void copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath) const override;
+	void copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath) const override;
+	void copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) const override;
+	void copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) const override;
+	void copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) const override;
+	void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath) const override;
 
 private:
 	files::Source source;
 
 	std::set<std::string> loadAllArtefactVersions(const std::string& artefactId) const;
-	boost::filesystem::path getBasePath(const std::string& artefactId, const std::string& artefactVersion) const;
-	boost::filesystem::path getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, bool noArchitecture = true) const;
-	boost::filesystem::path getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const;
+	std::filesystem::path getBasePath(const std::string& artefactId, const std::string& artefactVersion) const;
+	std::filesystem::path getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, bool noArchitecture = true) const;
+	std::filesystem::path getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const;
 
-//	boost::filesystem::path createTmpDirectory(const model::Descriptor& descriptor) const;
+//	std::filesystem::path createTmpDirectory(const model::Descriptor& descriptor) const;
 };
 
 } /* namespace repository */

@@ -1,3 +1,4 @@
+#if 0
 #include <transformer/architectures/solver/Solver.h>
 #include <transformer/architectures/solver/Architecture.h>
 #include <transformer/Logger.h>
@@ -422,3 +423,4 @@ void Solver::dump(const std::set<std::set<const Specifier*>>& specifiersSet) con
 } /* namespace solver */
 } /* namespace architectures */
 } /* namespace transformer */
+#endif

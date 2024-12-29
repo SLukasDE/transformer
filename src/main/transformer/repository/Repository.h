@@ -1,14 +1,12 @@
 #ifndef TRANSFORMER_REPOSITORY_REPOSITORY_H_
 #define TRANSFORMER_REPOSITORY_REPOSITORY_H_
 
+#include <filesystem>
+#include <istream>
+#include <memory>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <memory>
-#include <istream>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <transformer/model/Descriptor.h>
 #include <transformer/model/VersionRange.h>
@@ -31,12 +29,12 @@ public:
 
 	virtual std::unique_ptr<model::Descriptor> loadDescriptor(const std::string& name, const std::string& version) const = 0;
 
-	virtual void copyArtefactSource(const std::string& artefactId, const std::string& variant, const std::string& version, const boost::filesystem::path& toPath) const = 0;
-	virtual void copyArtefactHeaders(const std::string& artefactId, const std::string& variant, const std::string& version, const boost::filesystem::path& toPath) const = 0;
-	virtual void copyArtefactStaticLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const = 0;
-	virtual void copyArtefactDynamicLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const = 0;
-	virtual void copyArtefactExecutable(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const = 0;
-	virtual void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath) const = 0;
+	virtual void copyArtefactSource(const std::string& artefactId, const std::string& variant, const std::string& version, const std::filesystem::path& toPath) const = 0;
+	virtual void copyArtefactHeaders(const std::string& artefactId, const std::string& variant, const std::string& version, const std::filesystem::path& toPath) const = 0;
+	virtual void copyArtefactStaticLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const = 0;
+	virtual void copyArtefactDynamicLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const = 0;
+	virtual void copyArtefactExecutable(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const = 0;
+	virtual void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath) const = 0;
 };
 
 } /* namespace repository */

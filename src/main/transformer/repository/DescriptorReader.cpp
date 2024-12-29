@@ -100,11 +100,11 @@ DescriptorReader::~DescriptorReader() {
 }
 
 
-void DescriptorReader::read(const boost::filesystem::path path) {
-	if(!boost::filesystem::exists(path)) {
+void DescriptorReader::read(const std::filesystem::path path) {
+	if(!std::filesystem::exists(path)) {
 		throw esl::system::Stacktrace::add(std::runtime_error("File \"" + path.generic_string() + "\" does not exists."));
 	}
-	if(!boost::filesystem::is_regular(path)) {
+	if(!std::filesystem::is_regular_file(path)) {
 		throw esl::system::Stacktrace::add(std::runtime_error("Path \"" + path.generic_string() + "\" is not a file."));
 	}
 	std::ifstream istream(path.string());
@@ -349,7 +349,12 @@ void DescriptorReader::read(std::istream& istream) {
 	}
 
 	if(descriptor.artefactId.empty()) {
-		descriptor.artefactId = boost::filesystem::current_path().leaf().generic_string();
+		//descriptor.artefactId = std::filesystem::current_path().leaf().generic_string();
+		std::filesystem::path path = std::filesystem::current_path();
+		for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(path)) {
+			descriptor.artefactId = dirEntry.path().generic_string();
+		}
+
 		descriptor.artefactVersion = "1.0.0";
 		descriptor.apiVersion = "1.0.0";
 		descriptor.commonVersion = true;

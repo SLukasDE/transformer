@@ -1,10 +1,9 @@
 #ifndef TRANSFORMER_REPOSITORY_DESCRIPTORWRITER_H_
 #define TRANSFORMER_REPOSITORY_DESCRIPTORWRITER_H_
 
+#include <filesystem>
+#include <ostream>
 #include <vector>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <transformer/model/Descriptor.h>
 #include <transformer/model/Variant.h>
@@ -13,7 +12,6 @@
 #include <transformer/model/VersionRanges.h>
 #include <transformer/model/Dependency.h>
 #include <transformer/model/DependencySolved.h>
-#include <ostream>
 
 namespace transformer {
 namespace repository {
@@ -23,7 +21,7 @@ public:
 	DescriptorWriter(const model::Descriptor& descriptor);
 	~DescriptorWriter();
 
-	void write(const boost::filesystem::path path) const;
+	void write(const std::filesystem::path path) const;
 	void write(std::ostream& os) const;
 
 private:

@@ -4,50 +4,51 @@
 
 #include <esl/system/Stacktrace.h>
 
-#include <stdexcept>
-#include <iostream>
 #include <fstream> // DRY_RUN / parallelCount == 0
+#include <iostream>
+#include <list>
+#include <stdexcept>
 
 namespace transformer {
 
-void Execute::mkdir(const boost::filesystem::path& path) {
+void Execute::mkdir(const std::filesystem::path& path) {
 	addLineToScript("mkdir -p " + path.generic_string());
 
 	if(Config::parallelCount > 0) {
 		/* create directory if not exists */
-		if(!boost::filesystem::exists(path)) {
-			boost::filesystem::create_directories(path);
+		if(!std::filesystem::exists(path)) {
+			std::filesystem::create_directories(path);
 		}
-		else if(!boost::filesystem::is_directory(path)) {
+		else if(!std::filesystem::is_directory(path)) {
 			throw esl::system::Stacktrace::add(std::runtime_error(path.generic_string() + " is no directory"));
 		}
 	}
 }
 
-void Execute::remove(const boost::filesystem::path& path) {
+void Execute::remove(const std::filesystem::path& path) {
 	addLineToScript("rm -f " + path.generic_string());
 
 	/* remove file (or directory?) */
 	if(Config::parallelCount > 0) {
-		boost::filesystem::remove(path);
+		std::filesystem::remove(path);
 	}
 }
 
-void Execute::removeAll(const boost::filesystem::path& path) {
+void Execute::removeAll(const std::filesystem::path& path) {
 	addLineToScript("rm -rf " + path.generic_string());
 
 	if(Config::parallelCount > 0) {
 		/* remove file or directory recursively */
-		boost::filesystem::remove_all(path);
+		std::filesystem::remove_all(path);
 	}
 }
 
-void Execute::copy(const boost::filesystem::path& fromPath, const boost::filesystem::path& toPath) {
+void Execute::copy(const std::filesystem::path& fromPath, const std::filesystem::path& toPath) {
 	addLineToScript("cp -a " + fromPath.generic_string() + " " + toPath.generic_string());
 
 	if(Config::parallelCount > 0) {
 		try {
-			boost::filesystem::copy(fromPath, toPath);
+			std::filesystem::copy(fromPath, toPath);
 		}
 		catch(const std::exception& e) {
 			throw esl::system::Stacktrace::add(std::runtime_error(e.what()));
@@ -55,12 +56,12 @@ void Execute::copy(const boost::filesystem::path& fromPath, const boost::filesys
 	}
 }
 
-void Execute::copyFile(const boost::filesystem::path& fromPath, const boost::filesystem::path& toPath) {
+void Execute::copyFile(const std::filesystem::path& fromPath, const std::filesystem::path& toPath) {
 	addLineToScript("cp " + fromPath.generic_string() + " " + toPath.generic_string());
 
 	if(Config::parallelCount > 0) {
 		try {
-			boost::filesystem::copy_file(fromPath, toPath);
+			std::filesystem::copy_file(fromPath, toPath);
 		}
 		catch(const std::exception& e) {
 			throw esl::system::Stacktrace::add(std::runtime_error(e.what()));
@@ -137,13 +138,13 @@ int Execute::run(std::vector<std::string> commands) {
 	return 0;
 }
 
-int Execute::tar(const boost::filesystem::path& tarFile, const boost::filesystem::path& fromPath) {
+int Execute::tar(const std::filesystem::path& tarFile, const std::filesystem::path& fromPath) {
 	int exitCode;
 	run("tar -czf " + tarFile.string() + " -C " + fromPath.string() + " .", exitCode);
 	return exitCode;
 }
 
-int Execute::untar(const boost::filesystem::path& tarFile, const boost::filesystem::path& toPath) {
+int Execute::untar(const std::filesystem::path& tarFile, const std::filesystem::path& toPath) {
 	int exitCode;
 	run("tar -xzf " + tarFile.string() + " -C " + toPath.string(), exitCode);
 	return exitCode;

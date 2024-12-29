@@ -5,7 +5,8 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <boost/optional.hpp>
+#include <optional>
+
 //#include <transformer/model/Solved.h>
 #include <transformer/model/DependencySolved.h>
 #include <transformer/model/SystemPath.h>
@@ -69,7 +70,7 @@ public:
 	const std::map<std::string, std::vector<DependencySolved>>& getSolved() const;
 
 	void setSystemPath(std::string libraryName, std::string libraryPath, std::string includePath);
-	const boost::optional<SystemPath>& getSystemPath() const;
+	const std::optional<SystemPath>& getSystemPath() const;
 
 private:
 	std::string artefactId;
@@ -93,7 +94,7 @@ private:
 
 	// beim Laden der Descriptoren werden auch von einem System-Repository (schaut nach, was auf dem OS installiert ist) sog. "virtuelle Descriptoren"  generiert.
 	// Zum Auflösen des "best match" sowie des "possible match" Descriptor ist es erforderlich zu wissen ob es ein System- oder (echter) Repository-Descriptor ist.
-	boost::optional<SystemPath> systemPaths;
+	std::optional<SystemPath> systemPaths;
 
 };
 

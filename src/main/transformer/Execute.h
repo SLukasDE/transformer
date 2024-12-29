@@ -3,10 +3,7 @@
 
 #include <transformer/Config.h>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
-
+#include <filesystem>
 #include <vector>
 #include <utility>
 #include <string>
@@ -20,18 +17,18 @@ class Execute final {
 public:
 	Execute() = delete;
 
-	static void mkdir(const boost::filesystem::path& path);
-	static void remove(const boost::filesystem::path& path);
-	static void removeAll(const boost::filesystem::path& path);
-	static void copy(const boost::filesystem::path& fromPath, const boost::filesystem::path& toPath);
-	static void copyFile(const boost::filesystem::path& fromPath, const boost::filesystem::path& toPath);
+	static void mkdir(const std::filesystem::path& path);
+	static void remove(const std::filesystem::path& path);
+	static void removeAll(const std::filesystem::path& path);
+	static void copy(const std::filesystem::path& fromPath, const std::filesystem::path& toPath);
+	static void copyFile(const std::filesystem::path& fromPath, const std::filesystem::path& toPath);
 
 	static void run(const std::string& command);
 	static void run(const std::string& command, int& exitCode);
 	static int run(std::vector<std::string> textCommandList);
 
-	static int tar(const boost::filesystem::path& tarFile, const boost::filesystem::path& fromPath);
-	static int untar(const boost::filesystem::path& tarFile, const boost::filesystem::path& toPath);
+	static int tar(const std::filesystem::path& tarFile, const std::filesystem::path& fromPath);
+	static int untar(const std::filesystem::path& tarFile, const std::filesystem::path& toPath);
 
 //private:
 	static void addLineToScript(const std::string& line);

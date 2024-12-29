@@ -1,12 +1,12 @@
 #ifndef TRANSFORMER_LOGGER_H_
 #define TRANSFORMER_LOGGER_H_
 
-#include <esl/logging/Logger.h>
-#include <esl/logging/Level.h>
+#include <esl/monitoring/Streams.h>
+#include <esl/monitoring/Logger.h>
 
 namespace transformer {
 
-using Logger = esl::logging::Logger<esl::logging::Level::TRACE>;
+using Logger = esl::monitoring::Logger<esl::monitoring::Streams::Level::trace>;
 
 //extern Logger logger;
 

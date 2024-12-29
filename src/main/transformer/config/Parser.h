@@ -1,17 +1,14 @@
 #ifndef TRANSFORMER_CONFIG_PARSER_H_
 #define TRANSFORMER_CONFIG_PARSER_H_
 
-#include <sstream>
-#include <istream>
+#include <filesystem>
 #include <fstream>
-#include <utility>
-#include <string>
-#include <vector>
+#include <istream>
 #include <memory>
-
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 
 namespace transformer {
@@ -19,7 +16,7 @@ namespace config {
 
 class Parser {
 public:
-	Parser(boost::filesystem::path path);
+	Parser(std::filesystem::path path);
 	Parser(std::istream& iStream);
 
 	bool nextLine();
@@ -43,7 +40,7 @@ public:
 	static std::pair<std::string, std::string> splitTokenWithOption(const std::string& str);
 
 private:
-	boost::filesystem::path path;
+	std::filesystem::path path;
 	std::ifstream ifStream;
 
 	std::istream& iStream;

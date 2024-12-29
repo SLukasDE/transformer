@@ -21,18 +21,26 @@ RepositorySystem::RepositorySystem(const std::string& aArchitecture)
 	addAdditionalLibrary("boost_filesystem", "boost_filesystem", "", "");
 	addAdditionalLibrary("openssl", "crypto", "", "");
 
-	addAdditionalLibrary("esl_1_4_0", "esl", "", "");
-	addAdditionalLibrary("eslx_1_4_0", "eslx", "", "");
-	addAdditionalLibrary("boost_filesystem_1_70_0", "boost_filesystem", "/opt/boost_1_70_0", "/opt/boost_1_70_0/stage/lib");
+	//addAdditionalLibrary("esl_1_4_0", "esl", "", "");
+	//addAdditionalLibrary("eslx_1_4_0", "eslx", "", "");
+	//addAdditionalLibrary("boost_filesystem_1_70_0", "boost_filesystem", "/opt/boost_1_70_0", "/opt/boost_1_70_0/stage/lib");
 
 	addAdditionalLibrary("db2", "db2", "/opt/ibm/db2/V11.1/include", "/opt/ibm/db2/V11.1/lib64");
+	addAdditionalLibrary("mapr-rdkafka", "rdkafka", "/opt/mapr/include", "/opt/mapr/lib");
+	/*
 	addAdditionalLibrary("sqora", "sqora", "/opt/ibm/db2/V11.1/include", "/usr/lib/oracle/19.6/client64/lib");
 	addAdditionalLibrary("odbc", "odbc", "/usr/include", "/usr/lib64");
 	addAdditionalLibrary("sqlite3", "sqlite3", "/usr/include", "/usr/lib64");
 	addAdditionalLibrary("parquet", "parquet", "/usr/include", "/usr/lib64");
 	addAdditionalLibrary("arrow", "arrow", "/usr/include", "/usr/lib64");
 	addAdditionalLibrary("rdkafka", "rdkafka", "/usr/include", "/usr/lib64");
-	addAdditionalLibrary("mapr-rdkafka", "rdkafka", "/opt/mapr/include", "/opt/mapr/lib");
+	*/
+	addAdditionalLibrary("sqora", "sqora", "", "/usr/lib/oracle/19.6/client64/lib");
+	addAdditionalLibrary("odbc", "odbc", "", "");
+	addAdditionalLibrary("sqlite3", "sqlite3", "", "");
+	addAdditionalLibrary("parquet", "parquet", "", "");
+	addAdditionalLibrary("arrow", "arrow", "", "");
+	addAdditionalLibrary("rdkafka", "rdkafka", "", "");
 }
 
 RepositorySystem::~RepositorySystem() {
@@ -117,27 +125,27 @@ std::unique_ptr<model::Descriptor> RepositorySystem::loadDescriptor(const std::s
 	return descriptor;
 }
 
-void RepositorySystem::copyArtefactSource(const std::string& artefactId, const std::string& variant, const std::string& version, const boost::filesystem::path& toPath) const {
+void RepositorySystem::copyArtefactSource(const std::string& artefactId, const std::string& variant, const std::string& version, const std::filesystem::path& toPath) const {
 	throw esl::system::Stacktrace::add(std::runtime_error("cannot copy artefact from system repository"));
 }
 
-void RepositorySystem::copyArtefactHeaders(const std::string& artefactId, const std::string& variant, const std::string& version, const boost::filesystem::path& toPath) const {
+void RepositorySystem::copyArtefactHeaders(const std::string& artefactId, const std::string& variant, const std::string& version, const std::filesystem::path& toPath) const {
 	throw esl::system::Stacktrace::add(std::runtime_error("cannot copy artefact from system repository"));
 }
 
-void RepositorySystem::copyArtefactStaticLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const {
+void RepositorySystem::copyArtefactStaticLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const {
 	throw esl::system::Stacktrace::add(std::runtime_error("cannot copy artefact from system repository"));
 }
 
-void RepositorySystem::copyArtefactDynamicLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const {
+void RepositorySystem::copyArtefactDynamicLib(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const {
 	throw esl::system::Stacktrace::add(std::runtime_error("cannot copy artefact from system repository"));
 }
 
-void RepositorySystem::copyArtefactExecutable(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const boost::filesystem::path& toPath) const {
+void RepositorySystem::copyArtefactExecutable(const std::string& artefactId, const std::string& variant, const std::string& version, const std::string& architecture, const std::filesystem::path& toPath) const {
 	throw esl::system::Stacktrace::add(std::runtime_error("cannot copy artefact from system repository"));
 }
 
-void RepositorySystem::copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath) const {
+void RepositorySystem::copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath) const {
 	throw esl::system::Stacktrace::add(std::runtime_error("cannot copy artefact from system repository"));
 }
 

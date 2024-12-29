@@ -20,7 +20,7 @@ Config::Config(Specifiers& aSpecifiers)
 : specifiers(aSpecifiers)
 { }
 
-void Config::load(const boost::filesystem::path& path) {
+void Config::load(const std::filesystem::path& path) {
 	configArchitectures.load(path);
 	load();
 	//transformer::architectures::Architecture architecture;

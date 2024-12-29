@@ -30,15 +30,15 @@ bool isComment(const std::string& str) {
 */
 }
 
-Parser::Parser(boost::filesystem::path aPath)
+Parser::Parser(std::filesystem::path aPath)
 : path(std::move(aPath)),
   ifStream(path.string()),
   iStream(ifStream)
 {
-	if(!boost::filesystem::exists(path)) {
+	if(!std::filesystem::exists(path)) {
 		throw std::runtime_error("File \"" + path.generic_string() + "\" does not exists.");
 	}
-	if(!boost::filesystem::is_regular(path)) {
+	if(!std::filesystem::is_regular_file(path)) {
 		throw std::runtime_error("Path \"" + path.generic_string() + "\" is not a file.");
 	}
 }

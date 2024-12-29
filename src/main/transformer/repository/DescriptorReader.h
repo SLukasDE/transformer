@@ -6,11 +6,7 @@
 #include <transformer/model/Version.h>
 #include <transformer/model/VersionRange.h>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
-
-
+#include <filesystem>
 #include <istream>
 #include <set>
 
@@ -23,7 +19,7 @@ public:
 	DescriptorReader(model::Descriptor& descriptor);
 	~DescriptorReader();
 
-	void read(const boost::filesystem::path path);
+	void read(const std::filesystem::path path);
 	void read(std::istream& istream);
 
 private:

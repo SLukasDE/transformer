@@ -1,3 +1,4 @@
+#if 0
 #ifndef TRANSFORMER_ARCHITECTURES_SOLVER_SOLVER_H_
 #define TRANSFORMER_ARCHITECTURES_SOLVER_SOLVER_H_
 
@@ -45,3 +46,5 @@ private:
 } /* namespace transformer */
 
 #endif /* TRANSFORMER_ARCHITECTURES_SOLVER_SOLVER_H_ */
+#endif
+

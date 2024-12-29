@@ -6,11 +6,7 @@
 #include <transformer/build/BuildManager.h>
 #include <transformer/build/gcc/BuilderFactory.h>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
-
-
+#include <filesystem>
 #include <memory>
 #include <vector>
 #include <set>
@@ -20,37 +16,46 @@ namespace transformer {
 
 class Transformer {
 public:
+	enum Commands {
+		clean,
+		dependencies, generateSources, compile, test, link, site, package, install, provide,
+		onlyDependencies, onlyGenerateSources, onlyCompile, onlyTest, onlyLink, onlySite, onlyPackage, onlyInstall, onlyProvide
+	};
+
+	enum Generators {
+		cdtProject, make, cmake, meson
+	};
+
+	struct Settings {
+		Settings(int argc, char **argv);
+
+		std::vector<Commands> commands;
+		std::string buildFile;
+		unsigned short parallelCount = 0;
+		std::string scriptFile;
+		std::string loggerFile;
+		std::set<std::string> optionArchitectures;
+		std::set<std::string> optionVariants;
+		std::set<Generators> generators;
+	};
+
 	Transformer(int argc, char **argv);
 	~Transformer() = default;
 
-	void loadSettings();
-	void loadDescriptor();
+	int run();
 
 	static void printUsage();
 
-	std::size_t checkArguments() const;
-
-	int run();
-
+private:
 	static const std::size_t npos;
 
-private:
-	void loadArchitectures();
-
 	/* settings */
-	boost::filesystem::path localRepoPath;
-	std::string buildFile = "tbuild.cfg";
+	Settings settings;
+	std::filesystem::path localRepoPath;
+
 
 	/* architectures */
 	architectures::Specifiers specifiers;
-
-	std::vector<std::string> arguments;
-
-	bool hasOptionArchitectures = false;
-	std::set<std::string> optionArchitectures;
-
-	bool hasOptionVariants = false;
-	std::set<std::string> optionVariants;
 
 	transformer::repository::Database database;
 	std::unique_ptr<model::Descriptor> descriptor;
@@ -58,16 +63,10 @@ private:
 
 	build::gcc::BuilderFactory builderFactoryGCC;
 
+	void loadDescriptor();
 	const model::Descriptor& getDescriptor() const;
 	build::BuildManager& getBuildManager();
 	void printDescriptor() const;
-	std::string readValue(std::size_t& index) const;
-#if 1
-	std::vector<std::string> readValues(std::size_t& index) const;
-#else
-	std::pair<std::vector<std::string>,std::size_t> readValues(std::size_t& index) const;
-	static std::vector<std::string> splitValues(std::string values);
-#endif
 };
 
 } /* namespace transformer */

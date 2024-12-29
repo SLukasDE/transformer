@@ -78,14 +78,14 @@ const std::map<std::set<std::string>, std::unique_ptr<Architecture>>& Architectu
 	return architectures;
 }
 
-void Architectures::load(const boost::filesystem::path& path) {
+void Architectures::load(const std::filesystem::path& path) {
 	Parser parser(path);
 	load(parser);
 	/*
-	if(!boost::filesystem::exists(path)) {
+	if(!std::filesystem::exists(path)) {
 		throw Exception(parser, "File \"" + path.generic_string() + "\" does not exists.");
 	}
-	if(!boost::filesystem::is_regular(path)) {
+	if(!std::filesystem::is_regular(path)) {
 		throw Exception(parser, "Path \"" + path.generic_string() + "\" is not a file.");
 	}
 	std::ifstream istream(path.string());

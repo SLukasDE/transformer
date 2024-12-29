@@ -4,11 +4,7 @@
 #include <transformer/config/architectures/Architecture.h>
 #include <transformer/config/Parser.h>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
-
-
+#include <filesystem>
 #include <string>
 #include <istream>
 #include <map>
@@ -29,7 +25,7 @@ public:
 	const std::set<std::string>& getOptionals() const noexcept;
 	const std::map<std::set<std::string>, std::unique_ptr<Architecture>>& getArchitectures() const noexcept;
 
-	void load(const boost::filesystem::path& path);
+	void load(const std::filesystem::path& path);
 	void load(std::istream& iStream);
 
 private:

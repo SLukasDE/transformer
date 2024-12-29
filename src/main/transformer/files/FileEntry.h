@@ -6,12 +6,10 @@
 #ifndef TRANSFORMER_FILES_FILEENTRY_H_
 #define TRANSFORMER_FILES_FILEENTRY_H_
 
+#include <ctime>
+#include <filesystem>
 #include <string>
 #include <vector>
-#include <ctime>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 
 namespace transformer {
@@ -19,7 +17,7 @@ namespace files {
 
 struct FileEntry {
 	bool isDirectory = false;
-	boost::filesystem::path name;
+	std::filesystem::path name;
 	std::time_t lastWriteTime;
 
 	FileEntries entries;

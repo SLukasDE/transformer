@@ -4,10 +4,7 @@
 #include <transformer/architectures/Specifiers.h>
 #include <transformer/config/architectures/Architectures.h>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
-
+#include <filesystem>
 #include <istream>
 #include <ostream>
 
@@ -18,7 +15,7 @@ class Config {
 public:
 	Config(Specifiers& specifiers);
 
-	void load(const boost::filesystem::path& path);
+	void load(const std::filesystem::path& path);
 	void load(std::istream& iStream);
 
 	void save(std::ostream& oStream);

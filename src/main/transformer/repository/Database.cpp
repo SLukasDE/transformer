@@ -20,7 +20,7 @@ Database::Database()
 Database::~Database() {
 }
 
-void Database::setLocalRepositoryPath(const boost::filesystem::path path) {
+void Database::setLocalRepositoryPath(const std::filesystem::path path) {
 	repositoryLocal.setPath(path);
 }
 
@@ -32,7 +32,7 @@ void Database::addRepository(const std::string& name, Repository& repository) {
 	repositories.emplace_back(name, repository);
 }
 
-std::unique_ptr<model::Descriptor> Database::loadDescriptor(const boost::filesystem::path path) {
+std::unique_ptr<model::Descriptor> Database::loadDescriptor(const std::filesystem::path path) {
 	std::unique_ptr<model::Descriptor> descriptor(new model::Descriptor);
 	DescriptorReader descriptorReader(*descriptor.get());
 	descriptorReader.read(path);
@@ -219,32 +219,32 @@ std::set<std::string> Database::getApiVersions(const std::string& artefactId, co
 	return result;
 }
 
-void Database::copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath) {
+void Database::copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath) {
 	makeLocalAvailable(artefactId, artefactVersion);
 	repositoryLocal.copyArtefactSource(artefactId, artefactVersion, variant, toPath);
 }
 
-void Database::copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath) {
+void Database::copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath) {
 	makeLocalAvailable(artefactId, artefactVersion);
 	repositoryLocal.copyArtefactHeaders(artefactId, artefactVersion, variant, toPath);
 }
 
-void Database::copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) {
+void Database::copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) {
 	makeLocalAvailable(artefactId, artefactVersion);
 	repositoryLocal.copyArtefactStaticLib(artefactId, artefactVersion, variant, architecture, toPath);
 }
 
-void Database::copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) {
+void Database::copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) {
 	makeLocalAvailable(artefactId, artefactVersion);
 	repositoryLocal.copyArtefactDynamicLib(artefactId, artefactVersion, variant, architecture, toPath);
 }
 
-void Database::copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) {
+void Database::copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) {
 	makeLocalAvailable(artefactId, artefactVersion);
 	repositoryLocal.copyArtefactExecutable(artefactId, artefactVersion, variant, architecture, toPath);
 }
 
-void Database::copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath) {
+void Database::copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath) {
 	makeLocalAvailable(artefactId, artefactVersion);
 	repositoryLocal.copyArtefactGenerated(artefactId, artefactVersion, variant, architecture, generatorId, toPath);
 }
@@ -375,7 +375,7 @@ void Database::uploadArtefact(const model::Descriptor& descriptor, const std::st
 }
 
 void Database::uploadArtefactSource(const model::Descriptor& descriptor, const std::string& variantName) const {
-	const boost::filesystem::path tmpPath = createTmpDirectory(descriptor);
+	const std::filesystem::path tmpPath = createTmpDirectory(descriptor);
 	files::Source sourceTo(tmpPath);
 	build::Sources sourcesFrom(descriptor);
 	std::vector<std::string> filePatterns = descriptor.getVariant(variantName).getSourceFilePatternsEffective();
@@ -389,10 +389,10 @@ void Database::uploadArtefactSource(const model::Descriptor& descriptor, const s
 
 		files::FileEntries::syncDirectoryStructure(entriesFrom, entriesTo, sourceTo.getPath(), false);
 		for(const auto& entry : entriesFromFiltered.getList()) {
-			boost::filesystem::path fromPath = sourceFrom.get().getPath();
+			std::filesystem::path fromPath = sourceFrom.get().getPath();
 			fromPath /= entry.name;
 
-			boost::filesystem::path toPath = sourceTo.getPath();
+			std::filesystem::path toPath = sourceTo.getPath();
 			toPath /= entry.name;
 			Execute::copyFile(fromPath, toPath);
 		}
@@ -404,7 +404,7 @@ void Database::uploadArtefactSource(const model::Descriptor& descriptor, const s
 }
 
 void Database::uploadArtefactHeaders(const model::Descriptor& descriptor, const std::string& variantName) const {
-	const boost::filesystem::path tmpPath = createTmpDirectory(descriptor);
+	const std::filesystem::path tmpPath = createTmpDirectory(descriptor);
 	files::Source sourceTo(tmpPath);
 	build::Sources sourcesFrom(descriptor);
 	std::vector<std::string> filePatterns = descriptor.getVariant(variantName).getHeaderFilePatternsEffective();
@@ -418,10 +418,10 @@ void Database::uploadArtefactHeaders(const model::Descriptor& descriptor, const 
 
 		files::FileEntries::syncDirectoryStructure(entriesFrom, entriesTo, sourceTo.getPath(), false);
 		for(const auto& entry : entriesFromFiltered.getList()) {
-			boost::filesystem::path fromPath = sourceFrom.get().getPath();
+			std::filesystem::path fromPath = sourceFrom.get().getPath();
 			fromPath /= entry.name;
 
-			boost::filesystem::path toPath = sourceTo.getPath();
+			std::filesystem::path toPath = sourceTo.getPath();
 			toPath /= entry.name;
 			Execute::copyFile(fromPath, toPath);
 		}
@@ -433,11 +433,11 @@ void Database::uploadArtefactHeaders(const model::Descriptor& descriptor, const 
 	Execute::removeAll(tmpPath);
 }
 
-boost::filesystem::path Database::createTmpDirectory(const model::Descriptor& descriptor) const {
-	boost::filesystem::path path = descriptor.getBuildDirEffective();
+std::filesystem::path Database::createTmpDirectory(const model::Descriptor& descriptor) const {
+	std::filesystem::path path = descriptor.getBuildDirEffective();
 	path /= "tmp";
 
-	if(boost::filesystem::exists(path)) {
+	if(std::filesystem::exists(path)) {
 		Execute::removeAll(path);
 	}
 	Execute::mkdir(path);

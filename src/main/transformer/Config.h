@@ -3,8 +3,7 @@
 
 #include <string>
 
-//#define NO_ESLX
-//#define USE_BOOST_PROCESS
+//#define NO_OPENESL
 //#define DRY_RUN := parallelCount == 0
 
 namespace transformer {

@@ -1,12 +1,10 @@
 #ifndef TRANSFORMER_FILES_FILEENTRIES_H_
 #define TRANSFORMER_FILES_FILEENTRIES_H_
 
-#include <vector>
+#include <filesystem>
 #include <set>
 #include <string>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
+#include <vector>
 
 
 namespace transformer {
@@ -19,7 +17,7 @@ public:
 	FileEntries();
 	virtual ~FileEntries();
 
-	void loadDirectory(const boost::filesystem::path& path);
+	void loadDirectory(const std::filesystem::path& path);
 	const std::vector<FileEntry>& getList() const;
 
 	FileEntries& operator+=(const FileEntries& rhs);
@@ -27,7 +25,7 @@ public:
 	FileEntries operator-(const FileEntries& rhs) const;
 
 	FileEntries makeFlat() const;
-	FileEntries makePrefix(const boost::filesystem::path& path) const;
+	FileEntries makePrefix(const std::filesystem::path& path) const;
 
 	template<typename Filter>
 	FileEntries filter(Filter filterCondition) const;
@@ -35,13 +33,13 @@ public:
 	FileEntries filter(const std::set<std::string>& includePatterns, const std::set<std::string>& excludePatterns) const;
 	FileEntries filter(const std::vector<std::string>& includePatterns, const std::vector<std::string>& excludePatterns) const;
 //	FileEntries filterByExtension(std::string extension) const;
-//	FileEntries filterByExtensions(const std::vector<boost::filesystem::path>& extensions) const;
+//	FileEntries filterByExtensions(const std::vector<std::filesystem::path>& extensions) const;
 
 	void print(const std::string& prefix) const;
 
-	static void syncDirectoryStructure(const FileEntries& entriesActual, const FileEntries& entriesTarget, const boost::filesystem::path& path, bool withDelete);
-	static void createDirectories(const boost::filesystem::path& path, const FileEntries& entries);
-	static void deleteDirectories(const boost::filesystem::path& path, const FileEntries& entries);
+	static void syncDirectoryStructure(const FileEntries& entriesActual, const FileEntries& entriesTarget, const std::filesystem::path& path, bool withDelete);
+	static void createDirectories(const std::filesystem::path& path, const FileEntries& entries);
+	static void deleteDirectories(const std::filesystem::path& path, const FileEntries& entries);
 
 private:
 	std::vector<FileEntry> entries;

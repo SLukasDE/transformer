@@ -40,7 +40,7 @@ int ProcessSystem::execute(esl::system::Arguments arguments) const {
 	return std::system(arguments.getArgs().c_str());
 }
 
-void ProcessSystem::sendSignal(const esl::utility::Signal& signal) const {
+void ProcessSystem::sendSignal(const esl::system::Signal& signal) const {
 }
 
 const void* ProcessSystem::getNativeHandle() const {

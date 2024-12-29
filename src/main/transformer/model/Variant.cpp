@@ -1,5 +1,7 @@
 #include <transformer/model/Descriptor.h>
 #include <transformer/model/Variant.h>
+
+#include <algorithm>
 #include <iostream>
 
 namespace transformer {

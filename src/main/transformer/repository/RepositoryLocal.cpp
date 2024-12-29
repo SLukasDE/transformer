@@ -24,7 +24,7 @@ std::string extractApiVersionFromFilename(const std::string& filename) {
 } /* anonymous namespace */
 
 /*
-RepositoryLocal::RepositoryLocal(boost::filesystem::path path)
+RepositoryLocal::RepositoryLocal(std::filesystem::path path)
 : Repository()
 //  source(path)
 {
@@ -35,15 +35,15 @@ RepositoryLocal::~RepositoryLocal() {
 }
 */
 
-void RepositoryLocal::setPath(const boost::filesystem::path path) {
+void RepositoryLocal::setPath(const std::filesystem::path path) {
 	source.setPath(path);
 }
 
 bool RepositoryLocal::hasArtefactVersion(const std::string& artefactId, const std::string& artefactVersion) const {
-	boost::filesystem::path path = getBasePath(artefactId, artefactVersion);
+	std::filesystem::path path = getBasePath(artefactId, artefactVersion);
 	path /= "tbuild.cfg";
 
-	return boost::filesystem::exists(path) && boost::filesystem::is_regular_file(path);
+	return std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
 }
 
 bool RepositoryLocal::hasApiVersion(const std::string& artefactId, const std::string& aApiVersion) const {
@@ -91,7 +91,7 @@ std::set<std::string> RepositoryLocal::loadArtefactVersions(const std::string& a
 				continue;
 			}
 
-			boost::filesystem::path path = source.getPath();
+			std::filesystem::path path = source.getPath();
 			path /= artefactId;
 			path /= fileEntryVersion.name;
 
@@ -136,10 +136,10 @@ std::set<std::string> RepositoryLocal::loadApiVersions(const std::string& artefa
 
 std::unique_ptr<model::Descriptor> RepositoryLocal::loadDescriptor(const std::string& artefactId, const std::string& artefactVersion) const {
 	std::unique_ptr<model::Descriptor> descriptor;
-	boost::filesystem::path path = getBasePath(artefactId, artefactVersion);
+	std::filesystem::path path = getBasePath(artefactId, artefactVersion);
 	path /= "tbuild.cfg";
 
-	if(boost::filesystem::exists(path) && boost::filesystem::is_regular_file(path)) {
+	if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
 		descriptor.reset(new model::Descriptor);
 		DescriptorReader descriptorReader(*descriptor.get());
 		descriptorReader.read(path);
@@ -153,7 +153,7 @@ std::unique_ptr<model::Descriptor> RepositoryLocal::loadDescriptor(const std::st
  * ******************************* */
 
 void RepositoryLocal::uploadDescriptor(const model::Descriptor& descriptor) const {
-	boost::filesystem::path path = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion());
+	std::filesystem::path path = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion());
 
 	Execute::mkdir(path);
 	path /= "tbuild.cfg";
@@ -171,8 +171,8 @@ void RepositoryLocal::uploadDescriptor(const model::Descriptor& descriptor) cons
  * Save Artefact-Elements from file system *
  * *************************************** */
 
-void RepositoryLocal::uploadArtefactSource(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const {
-	boost::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName);
+void RepositoryLocal::uploadArtefactSource(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const {
+	std::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName);
 
 	Execute::mkdir(toPath);
 	toPath /= ("source.tgz");
@@ -181,8 +181,8 @@ void RepositoryLocal::uploadArtefactSource(const boost::filesystem::path& fromPa
 	source.invalidateFileEntries();
 }
 
-void RepositoryLocal::uploadArtefactHeaders(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const {
-	boost::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName);
+void RepositoryLocal::uploadArtefactHeaders(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName) const {
+	std::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName);
 
 	Execute::mkdir(toPath);
 	toPath /= "headers.tgz";
@@ -191,8 +191,8 @@ void RepositoryLocal::uploadArtefactHeaders(const boost::filesystem::path& fromP
 	source.invalidateFileEntries();
 }
 
-void RepositoryLocal::uploadArtefactStaticLib(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const {
-	boost::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
+void RepositoryLocal::uploadArtefactStaticLib(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const {
+	std::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
 
 	Execute::mkdir(toPath);
 	toPath /= "static.tgz";
@@ -201,8 +201,8 @@ void RepositoryLocal::uploadArtefactStaticLib(const boost::filesystem::path& fro
 	source.invalidateFileEntries();
 }
 
-void RepositoryLocal::uploadArtefactDynamicLib(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const {
-	boost::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
+void RepositoryLocal::uploadArtefactDynamicLib(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const {
+	std::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
 
 	Execute::mkdir(toPath);
 	toPath /= "dynamic.tgz";
@@ -211,8 +211,8 @@ void RepositoryLocal::uploadArtefactDynamicLib(const boost::filesystem::path& fr
 	source.invalidateFileEntries();
 }
 
-void RepositoryLocal::uploadArtefactExecutable(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const {
-	boost::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
+void RepositoryLocal::uploadArtefactExecutable(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture) const {
+	std::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
 
 	Execute::mkdir(toPath);
 	toPath /= "executable.tgz";
@@ -221,8 +221,8 @@ void RepositoryLocal::uploadArtefactExecutable(const boost::filesystem::path& fr
 	source.invalidateFileEntries();
 }
 
-void RepositoryLocal::uploadArtefactGenerated(const boost::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture, const std::string& generatorId) const {
-	boost::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
+void RepositoryLocal::uploadArtefactGenerated(const std::filesystem::path& fromPath, const model::Descriptor& descriptor, const std::string& variantName, const std::string& architecture, const std::string& generatorId) const {
+	std::filesystem::path toPath = getBasePath(descriptor.getArtefactId(), descriptor.getArtefactVersion(), variantName, architecture);
 
 	Execute::mkdir(toPath);
 	toPath /= "generated";
@@ -238,7 +238,7 @@ void RepositoryLocal::uploadArtefactGenerated(const boost::filesystem::path& fro
  * ******************************************** */
 
 void RepositoryLocal::saveArtefactSource(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant) const {
-	boost::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant);
+	std::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant);
 	Execute::mkdir(toPath);
 
 	fromRepository.copyArtefactSource(artefactId, artefactVersion, variant, toPath);
@@ -247,7 +247,7 @@ void RepositoryLocal::saveArtefactSource(const Repository& fromRepository, const
 }
 
 void RepositoryLocal::saveArtefactHeaders(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant) const {
-	boost::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant);
+	std::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant);
 	Execute::mkdir(toPath);
 
 	fromRepository.copyArtefactHeaders(artefactId, artefactVersion, variant, toPath);
@@ -256,7 +256,7 @@ void RepositoryLocal::saveArtefactHeaders(const Repository& fromRepository, cons
 }
 
 void RepositoryLocal::saveArtefactStaticLib(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const {
-	boost::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+	std::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	Execute::mkdir(toPath);
 
 	fromRepository.copyArtefactStaticLib(artefactId, artefactVersion, variant, architecture, toPath);
@@ -265,7 +265,7 @@ void RepositoryLocal::saveArtefactStaticLib(const Repository& fromRepository, co
 }
 
 void RepositoryLocal::saveArtefactDynamicLib(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const {
-	boost::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+	std::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	Execute::mkdir(toPath);
 
 	fromRepository.copyArtefactDynamicLib(artefactId, artefactVersion, variant, architecture, toPath);
@@ -274,7 +274,7 @@ void RepositoryLocal::saveArtefactDynamicLib(const Repository& fromRepository, c
 }
 
 void RepositoryLocal::saveArtefactExecutable(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const {
-	boost::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+	std::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	Execute::mkdir(toPath);
 
 	fromRepository.copyArtefactExecutable(artefactId, artefactVersion, variant, architecture, toPath);
@@ -283,7 +283,7 @@ void RepositoryLocal::saveArtefactExecutable(const Repository& fromRepository, c
 }
 
 void RepositoryLocal::saveArtefactGenerated(const Repository& fromRepository, const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId) const {
-	boost::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+	std::filesystem::path toPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	toPath /= "generated";
 	toPath /= generatorId;
 	Execute::mkdir(toPath);
@@ -297,38 +297,38 @@ void RepositoryLocal::saveArtefactGenerated(const Repository& fromRepository, co
  * Copy Artefact-Elements to file system *
  * ************************************* */
 
-void RepositoryLocal::copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath) const {
-	boost::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, true);
+void RepositoryLocal::copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath) const {
+	std::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, true);
 	fromPath /= "source.tgz";
 	Execute::untar(fromPath, toPath);
 }
 
-void RepositoryLocal::copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath) const {
-	boost::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, true);
+void RepositoryLocal::copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath) const {
+	std::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, true);
 	fromPath /= "headers.tgz";
 	Execute::untar(fromPath, toPath);
 }
 
-void RepositoryLocal::copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) const {
-	boost::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+void RepositoryLocal::copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) const {
+	std::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	fromPath /= "static.tgz";
 	Execute::untar(fromPath, toPath);
 }
 
-void RepositoryLocal::copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) const {
-	boost::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+void RepositoryLocal::copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) const {
+	std::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	fromPath /= "dynamic.tgz";
 	Execute::untar(fromPath, toPath);
 }
 
-void RepositoryLocal::copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath) const {
-	boost::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+void RepositoryLocal::copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath) const {
+	std::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	fromPath /= "executable.tgz";
 	Execute::untar(fromPath, toPath);
 }
 
-void RepositoryLocal::copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath) const {
-	boost::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
+void RepositoryLocal::copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath) const {
+	std::filesystem::path fromPath = getBasePath(artefactId, artefactVersion, variant, architecture);
 	fromPath /= "generated";
 	fromPath /= generatorId;
 	fromPath /= "generated.tgz";
@@ -357,8 +357,8 @@ std::set<std::string> RepositoryLocal::loadAllArtefactVersions(const std::string
 	return result;
 }
 
-boost::filesystem::path RepositoryLocal::getBasePath(const std::string& artefactId, const std::string& artefactVersion) const {
-	boost::filesystem::path path = source.getPath();
+std::filesystem::path RepositoryLocal::getBasePath(const std::string& artefactId, const std::string& artefactVersion) const {
+	std::filesystem::path path = source.getPath();
 
 	path /= artefactId;
 	path /= artefactVersion;
@@ -366,8 +366,8 @@ boost::filesystem::path RepositoryLocal::getBasePath(const std::string& artefact
 	return path;
 }
 
-boost::filesystem::path RepositoryLocal::getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, bool noArchitecture) const {
-	boost::filesystem::path path = getBasePath(artefactId, artefactVersion);
+std::filesystem::path RepositoryLocal::getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, bool noArchitecture) const {
+	std::filesystem::path path = getBasePath(artefactId, artefactVersion);
 
 	if(variant.empty()) {
 		path /= "default";
@@ -383,8 +383,8 @@ boost::filesystem::path RepositoryLocal::getBasePath(const std::string& artefact
 	return path;
 }
 
-boost::filesystem::path RepositoryLocal::getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const {
-	boost::filesystem::path path = getBasePath(artefactId, artefactVersion, variant, false);
+std::filesystem::path RepositoryLocal::getBasePath(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture) const {
+	std::filesystem::path path = getBasePath(artefactId, artefactVersion, variant, false);
 
 	path /= "architecture";
 	path /= architecture;
@@ -392,14 +392,14 @@ boost::filesystem::path RepositoryLocal::getBasePath(const std::string& artefact
 	return path;
 }
 /*
-boost::filesystem::path RepositoryLocal::createTmpDirectory(const model::Descriptor& descriptor) const {
-	boost::filesystem::path path = descriptor.getBuildDirEffective();
+std::filesystem::path RepositoryLocal::createTmpDirectory(const model::Descriptor& descriptor) const {
+	std::filesystem::path path = descriptor.getBuildDirEffective();
 	path /= "tmp";
 
-	if(boost::filesystem::exists(path)) {
-		boost::filesystem::remove_all(path);
+	if(std::filesystem::exists(path)) {
+		std::filesystem::remove_all(path);
 	}
-	boost::filesystem::create_directory(path);
+	std::filesystem::create_directory(path);
 
 	return path;
 }

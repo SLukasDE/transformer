@@ -9,10 +9,7 @@
 #include <transformer/repository/RepositoryLocal.h>
 #include <transformer/repository/RepositorySystem.h>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
-
+#include <filesystem>
 #include <string>
 #include <map>
 #include <set>
@@ -29,10 +26,10 @@ public:
 	Database();
 	~Database();
 
-	void setLocalRepositoryPath(const boost::filesystem::path path);
+	void setLocalRepositoryPath(const std::filesystem::path path);
 	void addRepository(const std::string& name, Repository& repository);
 
-	std::unique_ptr<model::Descriptor> loadDescriptor(const boost::filesystem::path path);
+	std::unique_ptr<model::Descriptor> loadDescriptor(const std::filesystem::path path);
 
 
 	const model::Descriptor* getDescriptor(const std::string& artefactId, const std::string& artefactVersion) const;
@@ -44,12 +41,12 @@ public:
 	std::set<std::string> getArtefactVersions(const std::string& artefactId, const std::string& apiVersion) const;
 	std::set<std::string> getApiVersions(const std::string& artefactId, const std::string& apiVersionMin, const std::string& apiVersionMax) const;
 
-	void copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath);
-	void copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const boost::filesystem::path& toPath);
-	void copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath);
-	void copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath);
-	void copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const boost::filesystem::path& toPath);
-	void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const boost::filesystem::path& toPath);
+	void copyArtefactSource(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath);
+	void copyArtefactHeaders(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::filesystem::path& toPath);
+	void copyArtefactStaticLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath);
+	void copyArtefactDynamicLib(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath);
+	void copyArtefactExecutable(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::filesystem::path& toPath);
+	void copyArtefactGenerated(const std::string& artefactId, const std::string& artefactVersion, const std::string& variant, const std::string& architecture, const std::string& generatorId, const std::filesystem::path& toPath);
 
 	// install/provide current built artefact with all parts, like static, dynamic lib etc.
 //	void saveArtefact(const model::Descriptor& descriptor) const;
@@ -89,7 +86,7 @@ private:
 	void uploadArtefactSource(const model::Descriptor& descriptor, const std::string& variantName) const;
 	void uploadArtefactHeaders(const model::Descriptor& descriptor, const std::string& variantName) const;
 
-	boost::filesystem::path createTmpDirectory(const model::Descriptor& descriptor) const;
+	std::filesystem::path createTmpDirectory(const model::Descriptor& descriptor) const;
 };
 
 } /* namespace repository */

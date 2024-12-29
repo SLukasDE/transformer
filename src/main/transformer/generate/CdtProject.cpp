@@ -2,14 +2,14 @@
 //#include <transformer/build/Builder.h>
 #include <transformer/build/SolvedDescriptor.h>
 #include <transformer/build/SolvedDescriptors.h>
+
 #include <esl/system/Stacktrace.h>
+
+#include <filesystem>
 #include <vector>
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
-#include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 
 namespace transformer {
@@ -25,6 +25,15 @@ std::string toLower(std::string value) {
 	std::transform(value.begin(), value.end(), value.begin(),
 	    [](unsigned char c){ return std::tolower(c); });
 	return value;
+}
+
+std::string getProjectPath() {
+	std::string rv;
+	std::filesystem::path path = std::filesystem::current_path();
+	for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(path)) {
+	     rv = dirEntry.path().generic_string();
+	}
+	return rv;
 }
 }
 
@@ -49,7 +58,7 @@ CdtProject::CdtProject(const build::BuildManager& aBuildManager, std::string aAr
 : buildManager(aBuildManager),
   architecture(std::move(aArchitecture)),
   xmlIdCounter(createXmlIdCounter()),
-  projectPath(boost::filesystem::current_path().leaf().generic_string())
+  projectPath(getProjectPath())
 {
 }
 
@@ -262,7 +271,7 @@ CdtProject::ReferencedXmlIds CdtProject::generateCProjectVariant(std::ostream& o
 	// add generated sources
 	std::map<std::string, model::Generator> generators = variant.getGeneratorsEffective();
 	for(const auto generatorEntry : generators) {
-		boost::filesystem::path pathGeneratedSources = buildManager.getSources().getPathBuildGenerated(buildManager.getDescriptor().getArtefactId(), buildManager.getDescriptor().getArtefactVersion(), variantName, architecture, generatorEntry.first);
+		std::filesystem::path pathGeneratedSources = buildManager.getSources().getPathBuildGenerated(buildManager.getDescriptor().getArtefactId(), buildManager.getDescriptor().getArtefactVersion(), variantName, architecture, generatorEntry.first);
 		os << "          <listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:/" << projectPath << "/" << pathGeneratedSources.string() << "}&quot;\"/>\n";
 	}
 
@@ -274,13 +283,13 @@ CdtProject::ReferencedXmlIds CdtProject::generateCProjectVariant(std::ostream& o
 			}
 		}
 		else {
-			boost::filesystem::path path = buildManager.getSources().getPathBuildHeaders(solvedDescriptor.getArtefactId(), solvedDescriptor.getDescriptor().getArtefactVersion(), solvedDescriptor.getVariantName());
+			std::filesystem::path path = buildManager.getSources().getPathBuildHeaders(solvedDescriptor.getArtefactId(), solvedDescriptor.getDescriptor().getArtefactVersion(), solvedDescriptor.getVariantName());
 			os << "          <listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:/" << projectPath << "/" << path.string() << "}&quot;\"/>\n";
 
 			// and add generated sources of this dependency
 			std::map<std::string, model::Generator> generators = solvedDescriptor.getVariant().getGeneratorsEffective();
 			for(const auto generatorEntry : generators) {
-				boost::filesystem::path pathGeneratedSources = buildManager.getSources().getPathBuildGenerated(solvedDescriptor.getArtefactId(), solvedDescriptor.getDescriptor().getArtefactVersion(), solvedDescriptor.getVariantName(), architecture, generatorEntry.first);
+				std::filesystem::path pathGeneratedSources = buildManager.getSources().getPathBuildGenerated(solvedDescriptor.getArtefactId(), solvedDescriptor.getDescriptor().getArtefactVersion(), solvedDescriptor.getVariantName(), architecture, generatorEntry.first);
 				os << "          <listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:/" << projectPath << "/" << pathGeneratedSources.string() << "}&quot;\"/>\n";
 			}
 		}
@@ -329,7 +338,7 @@ CdtProject::ReferencedXmlIds CdtProject::generateCProjectVariant(std::ostream& o
 /*
 	// add path to resulting executable
 	{
-		boost::filesystem::path path = getSources().getPathBuildLinkExecutable(getDescriptor().getArtefactId(), getDescriptor().getArtefactVersion(), variantName, architecture);
+		std::filesystem::path path = getSources().getPathBuildLinkExecutable(getDescriptor().getArtefactId(), getDescriptor().getArtefactVersion(), variantName, architecture);
 		os << "          <listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:/" << projectPath << "/" << path.string() << "}&quot;\"/>\n";
 	}
 */

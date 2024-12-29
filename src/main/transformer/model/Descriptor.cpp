@@ -160,7 +160,7 @@ void Descriptor::setSystemPath(std::string libraryName, std::string libraryPath,
 	systemPaths = aSystemPath;
 }
 
-const boost::optional<SystemPath>& Descriptor::getSystemPath() const {
+const std::optional<SystemPath>& Descriptor::getSystemPath() const {
 	return systemPaths;
 }
 
