@@ -270,7 +270,7 @@ CdtProject::ReferencedXmlIds CdtProject::generateCProjectVariant(std::ostream& o
 	}
 	// add generated sources
 	std::map<std::string, model::Generator> generators = variant.getGeneratorsEffective();
-	for(const auto generatorEntry : generators) {
+	for(const auto& generatorEntry : generators) {
 		std::filesystem::path pathGeneratedSources = buildManager.getSources().getPathBuildGenerated(buildManager.getDescriptor().getArtefactId(), buildManager.getDescriptor().getArtefactVersion(), variantName, architecture, generatorEntry.first);
 		os << "          <listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:/" << projectPath << "/" << pathGeneratedSources.string() << "}&quot;\"/>\n";
 	}
@@ -288,7 +288,7 @@ CdtProject::ReferencedXmlIds CdtProject::generateCProjectVariant(std::ostream& o
 
 			// and add generated sources of this dependency
 			std::map<std::string, model::Generator> generators = solvedDescriptor.getVariant().getGeneratorsEffective();
-			for(const auto generatorEntry : generators) {
+			for(const auto& generatorEntry : generators) {
 				std::filesystem::path pathGeneratedSources = buildManager.getSources().getPathBuildGenerated(solvedDescriptor.getArtefactId(), solvedDescriptor.getDescriptor().getArtefactVersion(), solvedDescriptor.getVariantName(), architecture, generatorEntry.first);
 				os << "          <listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:/" << projectPath << "/" << pathGeneratedSources.string() << "}&quot;\"/>\n";
 			}

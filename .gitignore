@@ -1,5 +1,9 @@
 # build directory
-build
+build/
+
+!src/main/transformer/build/
+!src/main/transformer/config/build/
+
 tbuild2
 tbuild2_dryrun
 tbuild2_systemexec

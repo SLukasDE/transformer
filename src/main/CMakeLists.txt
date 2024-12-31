@@ -1,6 +1,14 @@
 # src/CMakeLists.txt
 include(FetchContent)
 message(STATUS "Try to find OpenESL by FetchContent")
+
+set(OPENESL_USE_CURL4ESL    OFF)
+set(OPENESL_USE_MHD4ESL     OFF)
+set(OPENESL_USE_OPENGTX4ESL OFF)
+set(OPENESL_USE_ODBC4ESL    OFF)
+set(OPENESL_USE_SQLITE4ESL  OFF)
+set(OPENESL_USE_ZSYSTEM4ESL ON)
+
 FetchContent_Declare(
     openesl
     GIT_REPOSITORY https://github.com/slukasde/open-esl
