@@ -7,7 +7,7 @@ namespace build {
 namespace gcc {
 
 const std::string Builder::execCxx = "g++";
-const std::string Builder::execCxxOptsCompileMain = "-std=c++17 -fPIC -Wall -fmessage-length=0 -O3";
+const std::string Builder::execCxxOptsCompileMain = "-std=c++17 -fPIC -Wall -fmessage-length=0 -O0";
 const std::string Builder::execCxxOptsCompileTest = "-std=c++17 -fPIC -Wall -fmessage-length=0 -O0 -g3 -fprofile-arcs -ftest-coverage";
 const std::string Builder::execCxxOptsLinkDynamic = "-shared";
 const std::string Builder::execCxxOptsLinkExecutableMain = "";
